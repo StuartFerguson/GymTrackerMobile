@@ -36,4 +36,10 @@ With an emulator running or a device connected, launch the app from Visual Studi
 dotnet build src/GymTrackerMobile/GymTrackerMobile.csproj -f net10.0-android -t:Run
 ```
 
-Startup is local-only and renders a minimal Gym Tracker page. No account, backend, network service, or persistence setup is required.
+Startup is local-only and renders a minimal Gym Tracker page. The application database is an EF Core SQLite file named `gym-tracker.db` in `FileSystem.AppDataDirectory`; pending EF migrations are applied before storage-dependent features use it. No account, backend, or network service is required.
+
+Persistence tests run offline against isolated temporary SQLite files:
+
+```powershell
+dotnet test tests/GymTrackerMobile.Persistence.Tests/GymTrackerMobile.Persistence.Tests.csproj
+```

@@ -1,5 +1,7 @@
 using GymTrackerMobile.UI;
+using GymTrackerMobile.Persistence;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Storage;
 
 namespace GymTrackerMobile;
 
@@ -17,6 +19,8 @@ public static class MauiProgram
             });
 
         builder.Services.AddTransient<StartupPage>();
+        var databasePath = Path.Combine(FileSystem.AppDataDirectory, "gym-tracker.db");
+        builder.Services.AddGymTrackerPersistence(databasePath);
 
 #if DEBUG
         builder.Logging.AddDebug();
