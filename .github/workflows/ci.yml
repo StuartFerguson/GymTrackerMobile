@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Restore, build, and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.400
+
+      - name: Restore MAUI workloads
+        run: dotnet workload restore GymTrackerMobile.sln
+
+      - name: Restore dependencies
+        run: dotnet restore GymTrackerMobile.sln
+
+      - name: Build solution
+        run: dotnet build GymTrackerMobile.sln --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test GymTrackerMobile.sln --no-restore --no-build --configuration Release
