@@ -7,56 +7,51 @@ public static class SeedData
 {
     private static readonly Guid MetadataId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
-    private static readonly (string Name, string Muscle, string Equipment, ExerciseMode Mode)[] Exercises =
+    private static readonly CatalogueExercise[] Exercises =
     [
-        ("Chest Press Machine", "Chest and shoulders", "Machine", ExerciseMode.Machine),
-        ("Pec Fly Machine", "Chest and shoulders", "Machine", ExerciseMode.Machine),
-        ("Seated Shoulder Press Machine", "Chest and shoulders", "Machine", ExerciseMode.Machine),
-        ("Incline Dumbbell Press", "Chest and shoulders", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Dumbbell Shoulder Press", "Chest and shoulders", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Lat Pulldown Machine", "Back and rear delts", "Machine", ExerciseMode.Machine),
-        ("Close Grip Lat Pulldown", "Back and rear delts", "Machine", ExerciseMode.Machine),
-        ("Seated Cable Row", "Back and rear delts", "Cable", ExerciseMode.Machine),
-        ("Rear Delt Fly Machine", "Back and rear delts", "Machine", ExerciseMode.Machine),
-        ("One-Arm Dumbbell Row", "Back and rear delts", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Tricep Extension Machine", "Arms", "Machine", ExerciseMode.Machine),
-        ("Bicep Curl Machine", "Arms", "Machine", ExerciseMode.Machine),
-        ("Barbell Curl", "Arms", "Barbell", ExerciseMode.Barbell),
-        ("Overhead Tricep Extension", "Arms", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Incline Bicep Curl", "Arms", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Concentration Bicep Curl", "Arms", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Hammer Curl", "Arms", "Dumbbell", ExerciseMode.Dumbbell),
-        ("Leg Press", "Legs", "Machine", ExerciseMode.Machine),
-        ("Seated Leg Curl", "Legs", "Machine", ExerciseMode.Machine),
-        ("Leg Extension", "Legs", "Machine", ExerciseMode.Machine)
+        new(10, "Chest Press Machine", "Chest and shoulders", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(11, "Pec Fly Machine", "Chest and shoulders", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(12, "Seated Shoulder Press Machine", "Chest and shoulders", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(13, "Incline Dumbbell Press", "Chest and shoulders", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(14, "Dumbbell Shoulder Press", "Chest and shoulders", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(15, "Lat Pulldown Machine", "Back and rear delts", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(16, "Close Grip Lat Pulldown", "Back and rear delts", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(17, "Seated Cable Row", "Back and rear delts", "Cable", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(18, "Rear Delt Fly Machine", "Back and rear delts", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(19, "One-Arm Dumbbell Row", "Back and rear delts", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(20, "Tricep Extension Machine", "Arms", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(21, "Bicep Curl Machine", "Arms", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(22, "Barbell Curl", "Arms", "Barbell", WeightEntryConvention.TotalLoad, ExerciseMode.Barbell),
+        new(23, "Overhead Tricep Extension", "Arms", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(24, "Incline Bicep Curl", "Arms", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(25, "Concentration Bicep Curl", "Arms", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(26, "Hammer Curl", "Arms", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
+        new(27, "Leg Press", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(28, "Seated Leg Curl", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(29, "Leg Extension", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine)
     ];
 
     private static readonly string[] TemplateNames = ["Push", "Pull", "Legs", "Full Body"];
 
     public static async Task EnsureSeededAsync(GymTrackerDbContext context, CancellationToken cancellationToken)
     {
-        if (!await context.Exercises.AnyAsync(cancellationToken))
+        var existingExercises = await context.Exercises.ToDictionaryAsync(x => x.Id, cancellationToken);
+        foreach (var item in Exercises)
         {
-            for (var index = 0; index < Exercises.Length; index++)
+            if (!existingExercises.TryGetValue(item.Id, out var exercise))
             {
-                var item = Exercises[index];
-                context.Exercises.Add(new Exercise
-                {
-                    Id = StableId(index + 10),
-                    Name = item.Name,
-                    PrimaryMuscleGroup = item.Muscle,
-                    EquipmentType = item.Equipment,
-                    WeightEntryConvention = item.Mode == ExerciseMode.Dumbbell
-                        ? WeightEntryConvention.PerDumbbell
-                        : item.Mode == ExerciseMode.Bodyweight
-                            ? WeightEntryConvention.BodyweightOnly
-                            : WeightEntryConvention.TotalLoad,
-                    DefaultMinimumRepetitions = 8,
-                    DefaultMaximumRepetitions = 12,
-                    DefaultSetCount = 3,
-                    ExerciseMode = item.Mode
-                });
+                exercise = new Exercise { Id = item.Id };
+                context.Exercises.Add(exercise);
             }
+
+            exercise.Name = item.Name;
+            exercise.PrimaryMuscleGroup = item.Muscle;
+            exercise.EquipmentType = item.Equipment;
+            exercise.WeightEntryConvention = item.WeightConvention;
+            exercise.DefaultMinimumRepetitions = item.MinimumRepetitions;
+            exercise.DefaultMaximumRepetitions = item.MaximumRepetitions;
+            exercise.DefaultSetCount = item.SetCount;
+            exercise.ExerciseMode = item.Mode;
         }
 
         if (!await context.WorkoutTemplates.AnyAsync(cancellationToken))
@@ -101,6 +96,20 @@ public static class SeedData
 
             await context.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private sealed record CatalogueExercise(
+        int StableIdValue,
+        string Name,
+        string Muscle,
+        string Equipment,
+        WeightEntryConvention WeightConvention,
+        ExerciseMode Mode,
+        int MinimumRepetitions = 8,
+        int MaximumRepetitions = 12,
+        int SetCount = 3)
+    {
+        public Guid Id => SeedData.StableId(StableIdValue);
     }
 
     private static Guid StableId(int value) => new($"00000000-0000-0000-0000-{value:000000000000}");
