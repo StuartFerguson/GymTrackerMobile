@@ -9,6 +9,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<GymTrackerDbContext>(options => options.UseSqlite($"Data Source={databasePath}"));
         services.AddScoped<DatabaseInitializer>();
+        services.AddScoped<IDatabaseInitializer>(services => services.GetRequiredService<DatabaseInitializer>());
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<ISettingsRepository, SettingsRepository>();
