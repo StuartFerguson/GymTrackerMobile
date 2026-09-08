@@ -10,7 +10,9 @@ public partial class AppShell : Shell
         Items.Add(new ShellContent
         {
             Title = "Gym Tracker",
-            ContentTemplate = new DataTemplate(() => services.GetRequiredService<GymTrackerMobile.UI.StartupPage>())
+            ContentTemplate = new DataTemplate(() => services.GetRequiredService<GymTrackerMobile.UI.DashboardPage>())
         });
+        Routing.RegisterRoute(GymTrackerMobile.UI.DashboardRoutes.StartWorkout, typeof(GymTrackerMobile.UI.StartWorkoutPage));
+        Routing.RegisterRoute(GymTrackerMobile.UI.DashboardRoutes.LogActivity, typeof(GymTrackerMobile.UI.LogActivityPage));
     }
 }

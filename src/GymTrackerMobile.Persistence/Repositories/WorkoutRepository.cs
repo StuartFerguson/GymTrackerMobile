@@ -5,6 +5,18 @@ namespace GymTrackerMobile.Persistence;
 
 public sealed class WorkoutRepository(GymTrackerDbContext context) : IWorkoutRepository
 {
+    public async Task<IReadOnlyList<WorkoutTemplate>> GetTemplatesAsync(CancellationToken cancellationToken = default) =>
+        await context.WorkoutTemplates.AsNoTracking().OrderBy(x => x.Name).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<WorkoutSession>> GetCompletedWorkoutsAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        CancellationToken cancellationToken = default) =>
+        await context.WorkoutSessions.AsNoTracking()
+            .Where(x => !x.IsActive && x.CompletedAtUtc != null && x.CompletedAtUtc >= fromUtc && x.CompletedAtUtc < toUtc)
+            .OrderByDescending(x => x.CompletedAtUtc)
+            .ToListAsync(cancellationToken);
+
     public async Task<WorkoutSession> StartWorkoutAsync(Guid templateId, DateTime startedAtUtc, CancellationToken cancellationToken = default)
     {
         if (await context.WorkoutSessions.AnyAsync(x => x.IsActive, cancellationToken))

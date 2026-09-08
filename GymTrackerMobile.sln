@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GymTrackerMobile.Domain.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GymTrackerMobile.Persistence.Tests", "tests\GymTrackerMobile.Persistence.Tests\GymTrackerMobile.Persistence.Tests.csproj", "{BF608832-C3F3-4A17-9159-F43A840EEF37}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GymTrackerMobile.UI.Tests", "tests\GymTrackerMobile.UI.Tests\GymTrackerMobile.UI.Tests.csproj", "{59FE9423-B758-4FE8-9219-A27F76939480}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,18 @@ Global
 		{BF608832-C3F3-4A17-9159-F43A840EEF37}.Release|x64.Build.0 = Release|Any CPU
 		{BF608832-C3F3-4A17-9159-F43A840EEF37}.Release|x86.ActiveCfg = Release|Any CPU
 		{BF608832-C3F3-4A17-9159-F43A840EEF37}.Release|x86.Build.0 = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|x64.Build.0 = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Debug|x86.Build.0 = Debug|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|x64.ActiveCfg = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|x64.Build.0 = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|x86.ActiveCfg = Release|Any CPU
+		{59FE9423-B758-4FE8-9219-A27F76939480}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,5 +126,6 @@ Global
 		{B2EE8B1E-DE01-4650-911E-602BB28A79A4} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1A703042-EC01-4AF5-BA37-3E0FAB43FEC1} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{BF608832-C3F3-4A17-9159-F43A840EEF37} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{59FE9423-B758-4FE8-9219-A27F76939480} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

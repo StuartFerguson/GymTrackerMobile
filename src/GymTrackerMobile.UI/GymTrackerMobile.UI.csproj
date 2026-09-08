@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GymTrackerMobile.Domain\GymTrackerMobile.Domain.csproj" />
+    <ProjectReference Include="..\GymTrackerMobile.Persistence\GymTrackerMobile.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
