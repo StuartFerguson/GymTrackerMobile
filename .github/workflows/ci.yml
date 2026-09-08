@@ -34,5 +34,11 @@ jobs:
       - name: Build solution
         run: dotnet build GymTrackerMobile.sln --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test GymTrackerMobile.sln --no-restore --no-build --configuration Release
+      - name: Run domain tests
+        run: dotnet test tests/GymTrackerMobile.Domain.Tests/GymTrackerMobile.Domain.Tests.csproj --no-restore --no-build --configuration Release
+
+      - name: Run persistence tests
+        run: dotnet test tests/GymTrackerMobile.Persistence.Tests/GymTrackerMobile.Persistence.Tests.csproj --no-restore --no-build --configuration Release
+
+      - name: Run UI tests
+        run: dotnet test tests/GymTrackerMobile.UI.Tests/GymTrackerMobile.UI.Tests.csproj --no-restore --no-build --configuration Release

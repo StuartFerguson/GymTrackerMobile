@@ -23,10 +23,12 @@ public sealed class DashboardViewModel
         _navigate = navigate ?? (route => Shell.Current.GoToAsync(route));
         StartWorkoutCommand = new Command(async () => await StartWorkoutAsync());
         LogActivityCommand = new Command(async () => await LogActivityAsync());
+        WeeklyPlanCommand = new Command(async () => await _navigate(DashboardRoutes.WeeklyPlan));
     }
 
     public ICommand StartWorkoutCommand { get; }
     public ICommand LogActivityCommand { get; }
+    public ICommand WeeklyPlanCommand { get; }
     public DashboardState State { get; private set; } = new();
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
