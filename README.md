@@ -24,6 +24,10 @@ dotnet test GymTrackerMobile.sln
 
 The app targets `net10.0-android` plus the MAUI desktop targets available on the host. The UI, domain, and persistence layers target `net10.0`, and the domain and persistence layers have separate test projects.
 
+## Continuous integration
+
+GitHub Actions runs the same workload restore, solution build, and test commands for pushes and pull requests targeting `master`. The workflow check is named `CI / Restore, build, and test`; require this check in branch protection before merging changes.
+
 ## Launch on Android
 
 With an emulator running or a device connected, launch the app from Visual Studio or with the MAUI tooling:
