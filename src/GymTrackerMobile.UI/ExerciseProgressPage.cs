@@ -55,6 +55,7 @@ public sealed class ExerciseProgressPage : ContentPage
                 _body.Children.Add(ExerciseHeader(state.SelectedExercise));
                 _body.Children.Add(Metrics(state));
                 _body.Children.Add(ProgressChart(state));
+                _body.Children.Add(WeeklyConsistency(state));
                 _body.Children.Add(History(state));
                 _body.Children.Add(LogWorkoutButton());
             }
@@ -135,6 +136,40 @@ public sealed class ExerciseProgressPage : ContentPage
             layout.Children.Add(Card(row));
         }
         return layout;
+    }
+
+    private static View WeeklyConsistency(ExerciseProgressState state)
+    {
+        var weeks = new HorizontalStackLayout { Spacing = 8 };
+        foreach (var week in state.WeeklyConsistencyList)
+        {
+            weeks.Children.Add(new Border
+            {
+                BackgroundColor = week.CompletedWorkoutCount > 0 ? Color.FromArgb("#D5F4F6") : Color.FromArgb("#F2F5F8"),
+                StrokeThickness = 0,
+                Padding = new Thickness(8, 7),
+                StrokeShape = new RoundRectangle { CornerRadius = 10 },
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 1,
+                    Children =
+                    {
+                        new Label { Text = week.WeekStartLocal.ToString("dd MMM", CultureInfo.InvariantCulture), FontSize = 11, TextColor = Muted },
+                        new Label { Text = week.CompletedWorkoutCount.ToString(CultureInfo.InvariantCulture), FontSize = 18, FontAttributes = FontAttributes.Bold, TextColor = Ink }
+                    }
+                }
+            });
+        }
+
+        return new VerticalStackLayout
+        {
+            Spacing = 8,
+            Children =
+            {
+                new Label { Text = "Weekly consistency", FontSize = 21, FontAttributes = FontAttributes.Bold, TextColor = Ink },
+                new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = weeks }
+            }
+        };
     }
 
     private static View ProgressChart(ExerciseProgressState state)

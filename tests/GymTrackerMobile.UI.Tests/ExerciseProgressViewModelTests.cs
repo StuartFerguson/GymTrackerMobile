@@ -81,6 +81,44 @@ public sealed class ExerciseProgressViewModelTests
         Assert.Equal("No history yet. Complete a workout to start tracking this exercise.", viewModel.State.EmptyStateMessage);
     }
 
+    [Fact]
+    public async Task Best_repetitions_reports_the_weight_used_for_that_set()
+    {
+        var exercise = Exercise("Chest Press Machine");
+        var session = Session(exercise, DateTime.UtcNow.AddDays(-1), Set(120, 6), Set(80, 12));
+        var viewModel = CreateViewModel([exercise], [session]);
+
+        await viewModel.LoadAsync();
+
+        Assert.Equal(12, viewModel.State.BestRepetitions);
+        Assert.Equal(80, viewModel.State.BestRepetitionsWeightKilograms);
+    }
+
+    [Fact]
+    public async Task Weekly_consistency_includes_empty_weeks()
+    {
+        var exercise = Exercise("Chest Press Machine");
+        var monday = StartOfWeek(DateTime.Now.Date.AddDays(-21));
+        var sessions = new[]
+        {
+            Session(exercise, monday.ToUniversalTime(), Set(80, 8)),
+            Session(exercise, monday.AddDays(14).ToUniversalTime(), Set(90, 8))
+        };
+        var viewModel = CreateViewModel([exercise], sessions);
+
+        await viewModel.LoadAsync();
+
+        var weeks = viewModel.State.WeeklyConsistencyList;
+        Assert.Contains(weeks, x => x.WeekStartLocal == monday.AddDays(7) && x.CompletedWorkoutCount == 0);
+        Assert.Contains(weeks, x => x.WeekStartLocal == monday && x.CompletedWorkoutCount == 1);
+    }
+
+    private static DateTime StartOfWeek(DateTime date)
+    {
+        var offset = ((int)date.DayOfWeek + 6) % 7;
+        return date.AddDays(-offset).Date;
+    }
+
     private static ExerciseProgressViewModel CreateViewModel(IReadOnlyList<Exercise> exercises, IReadOnlyList<WorkoutSession> sessions) =>
         new(new RecordingExerciseRepository(exercises), new RecordingWorkoutRepository(sessions), new NoOpDatabaseInitializer());
 

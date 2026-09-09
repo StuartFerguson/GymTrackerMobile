@@ -15,6 +15,8 @@ public sealed record ExerciseProgressEntry(DateTime DateLocal, double? WeightKil
     public string DateLabel => DateLocal.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
 }
 
+public sealed record WeeklyGymConsistencyEntry(DateTime WeekStartLocal, int CompletedWorkoutCount);
+
 public sealed record ExerciseProgressState(
     IReadOnlyList<ExerciseProgressExercise>? Exercises = null,
     Guid? SelectedExerciseId = null,
@@ -27,11 +29,13 @@ public sealed record ExerciseProgressState(
     int CompletedSetCount = 0,
     int PlannedSetCount = 0,
     string EmptyStateMessage = "No history yet. Complete a workout to start tracking this exercise.",
-    string? ErrorMessage = null)
+    string? ErrorMessage = null,
+    IReadOnlyList<WeeklyGymConsistencyEntry>? WeeklyConsistency = null)
 {
     public IReadOnlyList<ExerciseProgressExercise> ExerciseList => Exercises ?? [];
     public IReadOnlyList<ExerciseProgressEntry> HistoryList => History ?? [];
     public string VolumeLabel => SelectedExercise?.IsBodyweight == true ? "Repetitions" : "Training volume";
+    public IReadOnlyList<WeeklyGymConsistencyEntry> WeeklyConsistencyList => WeeklyConsistency ?? [];
 }
 
 public sealed class ExerciseProgressViewModel(IExerciseRepository exercises, IWorkoutRepository workouts, IDatabaseInitializer databaseInitializer)
@@ -46,7 +50,12 @@ public sealed class ExerciseProgressViewModel(IExerciseRepository exercises, IWo
             await databaseInitializer.InitializeAsync(cancellationToken);
             var catalogue = await exercises.GetExercisesAsync(cancellationToken);
             _sessions = await workouts.GetCompletedWorkoutsAsync(DateTime.UtcNow.AddYears(-10), DateTime.UtcNow.AddDays(1), cancellationToken);
-            State = State with { Exercises = catalogue.OrderBy(x => x.Name).Select(MapExercise).ToList(), ErrorMessage = null };
+            State = State with
+            {
+                Exercises = catalogue.OrderBy(x => x.Name).Select(MapExercise).ToList(),
+                WeeklyConsistency = BuildWeeklyConsistency(_sessions, DateTime.Now.Date),
+                ErrorMessage = null
+            };
             if (State.ExerciseList.Count > 0) SelectExercise(State.ExerciseList[0].Id);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -63,13 +72,17 @@ public sealed class ExerciseProgressViewModel(IExerciseRepository exercises, IWo
         var completedSets = entries.Sum(x => x.CompletedSets);
         var plannedSets = entries.Sum(x => x.PlannedSets);
         var weightedEntries = entries.Where(x => x.WeightKilograms is not null).ToList();
-        var best = entries.Where(x => x.Repetitions is not null).OrderByDescending(x => x.Repetitions).FirstOrDefault();
+        var completedSetRecords = _sessions.Where(x => x.CompletedAtUtc is not null)
+            .SelectMany(x => x.Exercises.Where(y => y.ExerciseId == exerciseId).SelectMany(y => y.Sets))
+            .Where(x => x.Status == SetStatus.Completed && x.Repetitions is not null)
+            .ToList();
+        var best = completedSetRecords.OrderByDescending(x => x.Repetitions).ThenByDescending(x => x.WeightKilograms ?? 0).FirstOrDefault();
         State = State with
         {
             SelectedExerciseId = exerciseId, SelectedExercise = selected, History = entries,
             HeaviestWeightKilograms = weightedEntries.Count == 0 ? null : weightedEntries.Max(x => x.WeightKilograms),
             BestRepetitions = best?.Repetitions,
-            BestRepetitionsWeightKilograms = best?.WeightKilograms,
+            BestRepetitionsWeightKilograms = selected.IsBodyweight ? null : best?.WeightKilograms,
             TrainingVolumeKilograms = entries.Sum(x => x.Volume), CompletedSetCount = completedSets, PlannedSetCount = plannedSets,
             EmptyStateMessage = entries.Count == 0 ? "No history yet. Complete a workout to start tracking this exercise." : string.Empty
         };
@@ -89,4 +102,21 @@ public sealed class ExerciseProgressViewModel(IExerciseRepository exercises, IWo
             }))
             .OrderByDescending(x => x.DateLocal)
             .ToList();
+
+    private static IReadOnlyList<WeeklyGymConsistencyEntry> BuildWeeklyConsistency(IReadOnlyList<WorkoutSession> sessions, DateTime todayLocal)
+    {
+        var currentWeek = StartOfWeek(todayLocal);
+        return Enumerable.Range(0, 8).Select(index =>
+        {
+            var weekStart = currentWeek.AddDays(-7 * (7 - index));
+            var count = sessions.Count(x => x.CompletedAtUtc is not null && StartOfWeek(x.CompletedAtUtc.Value.ToLocalTime().Date) == weekStart);
+            return new WeeklyGymConsistencyEntry(weekStart, count);
+        }).ToList();
+    }
+
+    private static DateTime StartOfWeek(DateTime date)
+    {
+        var offset = ((int)date.DayOfWeek + 6) % 7;
+        return date.Date.AddDays(-offset);
+    }
 }
