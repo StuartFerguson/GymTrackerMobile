@@ -20,11 +20,13 @@ public sealed class EntityRoundTripTests
                 context.ActivityRecords.Add(new ActivityRecord
                 {
                     ActivityDateUtc = DateTime.UtcNow.Date,
-                    ActivityType = ActivityType.Walking,
+                    ActivityType = ActivityType.Swimming,
                     DurationMinutes = 45,
-                    DistanceKilometres = 4.2,
+                    DistanceKilometres = 1,
                     Steps = 6000,
-                    Notes = "Lunch walk",
+                    PoolLengthMetres = 25,
+                    PoolLengths = 40,
+                    Notes = "Pool swim",
                     AveragePaceMinutesPerKilometre = 10.7
                 });
                 var recommendation = new Recommendation
@@ -52,6 +54,9 @@ public sealed class EntityRoundTripTests
 
             await using var reopened = await CreateContextAsync(path);
             Assert.Equal(1, await reopened.ActivityRecords.CountAsync());
+            var activity = await reopened.ActivityRecords.SingleAsync();
+            Assert.Equal(25, activity.PoolLengthMetres);
+            Assert.Equal(40, activity.PoolLengths);
             Assert.Equal(1, await reopened.Recommendations.Include(x => x.Outcome).CountAsync());
             Assert.Equal("kg", await reopened.UserSettings.Select(x => x.Value).SingleAsync());
             Assert.Equal("All sets completed", await reopened.Recommendations.Select(x => x.Explanation).SingleAsync());

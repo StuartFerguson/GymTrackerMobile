@@ -50,7 +50,7 @@ public sealed class DatabaseInitializationTests
                 Assert.Equal(exercises.Count, exercises.Select(x => x.Id).Distinct().Count());
                 Assert.Equal(4, await context.WorkoutTemplates.CountAsync());
                 Assert.Single(await context.BackupMetadata.ToListAsync());
-                Assert.Single(await context.Database.GetAppliedMigrationsAsync());
+                Assert.Equal(2, (await context.Database.GetAppliedMigrationsAsync()).Count());
                 await context.Database.CloseConnectionAsync();
             }
         }
