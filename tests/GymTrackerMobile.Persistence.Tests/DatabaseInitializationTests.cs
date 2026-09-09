@@ -100,4 +100,45 @@ public sealed class DatabaseInitializationTests
             if (File.Exists(path)) File.Delete(path);
         }
     }
+
+    [Fact]
+    public async Task Reset_clears_user_data_and_reseeds_built_in_catalogue()
+    {
+        await using var context = await CreateContextAsync();
+        context.UserSettings.Add(new UserSetting { Key = "illustration-style", Value = "Male" });
+        context.ActivityRecords.Add(new ActivityRecord { ActivityType = ActivityType.Walking, ActivityDateUtc = DateTime.UtcNow });
+        var template = await context.WorkoutTemplates.FirstAsync();
+        var session = new WorkoutSession
+        {
+            TemplateId = template.Id,
+            TemplateName = template.Name,
+            StartedAtUtc = DateTime.UtcNow,
+            IsActive = true
+        };
+        context.WorkoutSessions.Add(session);
+        await context.SaveChangesAsync();
+
+        var service = new AppDataResetService(context);
+
+        await service.ResetAsync();
+
+        Assert.Empty(await context.WorkoutSessions.ToListAsync());
+        Assert.Empty(await context.ActivityRecords.ToListAsync());
+        Assert.Empty(await context.UserSettings.ToListAsync());
+        Assert.Equal(20, await context.Exercises.CountAsync());
+        Assert.Equal(4, await context.WorkoutTemplates.CountAsync());
+        Assert.Equal(80, await context.TemplateExercises.CountAsync());
+        Assert.Single(await context.BackupMetadata.ToListAsync());
+    }
+
+    private static async Task<GymTrackerMobile.Persistence.GymTrackerDbContext> CreateContextAsync()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"gym-tracker-{Guid.NewGuid():N}.db");
+        var options = new DbContextOptionsBuilder<GymTrackerMobile.Persistence.GymTrackerDbContext>()
+            .UseSqlite($"Data Source={path};Pooling=False")
+            .Options;
+        var context = new GymTrackerMobile.Persistence.GymTrackerDbContext(options);
+        await new DatabaseInitializer(context).InitializeAsync();
+        return context;
+    }
 }
