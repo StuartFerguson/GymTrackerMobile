@@ -163,9 +163,25 @@ public static class ExerciseImageResolver
     public static string Resolve(string exerciseName) => exerciseName switch
     {
         "Chest Press Machine" => "exercise_chest_press.png",
-        "Pec Fly Machine" => "exercise_pec_fly.png",
+        "Pec Fly Machine" => "exercise_chest_press.png",
+        "Seated Shoulder Press Machine" => "exercise_chest_press.png",
+        "Incline Dumbbell Press" => "exercise_dumbbell.png",
+        "Dumbbell Shoulder Press" => "exercise_dumbbell.png",
         "Lat Pulldown Machine" => "exercise_lat_pulldown.png",
+        "Close Grip Lat Pulldown" => "exercise_lat_pulldown.png",
+        "Seated Cable Row" => "exercise_lat_pulldown.png",
+        "Rear Delt Fly Machine" => "exercise_lat_pulldown.png",
+        "One-Arm Dumbbell Row" => "exercise_dumbbell.png",
+        "Tricep Extension Machine" => "exercise_chest_press.png",
+        "Bicep Curl Machine" => "exercise_chest_press.png",
+        "Barbell Curl" => "exercise_barbell_curl.png",
+        "Overhead Tricep Extension" => "exercise_dumbbell.png",
+        "Incline Bicep Curl" => "exercise_dumbbell.png",
+        "Concentration Bicep Curl" => "exercise_dumbbell.png",
+        "Hammer Curl" => "exercise_dumbbell.png",
         "Leg Press" => "exercise_leg_press.png",
+        "Seated Leg Curl" => "exercise_leg_press.png",
+        "Leg Extension" => "exercise_leg_press.png",
         _ => "neutral_workout_full_body.png"
     };
 }

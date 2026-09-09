@@ -78,6 +78,21 @@ public sealed class ActiveWorkoutViewModelTests
         Assert.Equal(62.5, viewModel.State.CurrentExercise!.Sets[0].WeightKilograms);
     }
 
+    [Fact]
+    public void Seeded_exercises_resolve_to_non_fallback_artwork()
+    {
+        var names = new[]
+        {
+            "Chest Press Machine", "Pec Fly Machine", "Seated Shoulder Press Machine", "Incline Dumbbell Press",
+            "Dumbbell Shoulder Press", "Lat Pulldown Machine", "Close Grip Lat Pulldown", "Seated Cable Row",
+            "Rear Delt Fly Machine", "One-Arm Dumbbell Row", "Tricep Extension Machine", "Bicep Curl Machine",
+            "Barbell Curl", "Overhead Tricep Extension", "Incline Bicep Curl", "Concentration Bicep Curl",
+            "Hammer Curl", "Leg Press", "Seated Leg Curl", "Leg Extension"
+        };
+
+        Assert.All(names, name => Assert.DoesNotContain("neutral_", ExerciseImageResolver.Resolve(name), StringComparison.Ordinal));
+    }
+
     private static ActiveWorkoutViewModel CreateViewModel(WorkoutSession session, RecordingWorkoutRepository? repository = null) =>
         new(repository ?? new RecordingWorkoutRepository(session));
 
