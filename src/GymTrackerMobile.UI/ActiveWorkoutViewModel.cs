@@ -9,13 +9,16 @@ public sealed record ActiveWorkoutSet(
     double? WeightKilograms,
     int? Repetitions,
     SetStatus Status,
-    string? Notes);
+    string? Notes,
+    string? Difficulty);
 
 public sealed record ActiveWorkoutExercise(
     Guid Id,
     string Name,
     string MuscleAndMode,
     string TargetSummary,
+    int TargetMinimumRepetitions,
+    int TargetMaximumRepetitions,
     string ImageSource,
     WeightEntryConvention WeightEntryConvention,
     IReadOnlyList<ActiveWorkoutSet> Sets)
@@ -155,15 +158,22 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
         exercise.ExerciseName,
         $"{exercise.PrimaryMuscleGroup} · {ModeLabel(exercise.EquipmentType)}",
         $"{exercise.PlannedSetCount} sets of {exercise.TargetMinimumRepetitions}–{exercise.TargetMaximumRepetitions} reps",
+        exercise.TargetMinimumRepetitions,
+        exercise.TargetMaximumRepetitions,
         ExerciseImageResolver.Resolve(exercise.ExerciseName),
         exercise.WeightEntryConvention,
-        exercise.Sets.OrderBy(x => x.SetNumber).Select(x => new ActiveWorkoutSet(x.Id, x.SetNumber, x.WeightKilograms, x.Repetitions, x.Status, x.Notes)).ToList());
+        exercise.Sets.OrderBy(x => x.SetNumber).Select(x => new ActiveWorkoutSet(x.Id, x.SetNumber, x.WeightKilograms, x.Repetitions, x.Status, x.Notes, x.Difficulty)).ToList());
 
     private static string ModeLabel(string equipmentType) => equipmentType.Equals("Bodyweight", StringComparison.OrdinalIgnoreCase) ? "Bodyweight" : "Strength";
 
-    private static ActiveWorkoutRecommendation? BuildRecommendation(ActiveWorkoutExercise exercise) => exercise.ShowsWeight
-        ? new(62.5, exercise.Sets.FirstOrDefault()?.Repetitions ?? 8, exercise.Sets.FirstOrDefault()?.Repetitions ?? 10, "You’re on track. Try to match or beat your last set.")
-        : null;
+    private static ActiveWorkoutRecommendation? BuildRecommendation(ActiveWorkoutExercise exercise)
+    {
+        if (!exercise.ShowsWeight) return null;
+
+        var completed = exercise.Sets.Select(x => new ProgressionSet(x.WeightKilograms, x.Repetitions, x.Status, x.Difficulty)).ToList();
+        var result = ProgressionRecommendationEngine.Recommend(new ProgressionInput(exercise.TargetMinimumRepetitions, exercise.TargetMaximumRepetitions, completed, []));
+        return new(result.ProposedWeightKilograms, result.ProposedMinimumRepetitions, result.ProposedMaximumRepetitions, result.Explanation);
+    }
 
     private void ReplaceCurrentExercise(ActiveWorkoutExercise exercise)
     {
