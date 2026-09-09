@@ -1,0 +1,75 @@
+namespace GymTrackerMobile.UI;
+
+public enum WeeklyPlanDayKind
+{
+    Gym,
+    Activity,
+    Rest
+}
+
+public sealed record WeeklyPlanTemplateSummary(Guid Id, string Name);
+
+public sealed record WeeklyPlanDay(
+    string DayName,
+    int DayNumber,
+    WeeklyPlanDayKind Kind,
+    string Title,
+    string Detail,
+    Guid? TemplateId,
+    bool CanStartWorkout,
+    bool CanLogActivity,
+    string ShortDayName,
+    string IconSource,
+    string ActionLabel);
+
+public sealed class WeeklyPlanState
+{
+    public IReadOnlyList<WeeklyPlanDay> Days { get; init; } = [];
+}
+
+public static class WeeklyPlanStateBuilder
+{
+    private static readonly (DayOfWeek Day, string Title, WeeklyPlanDayKind Kind, string Detail)[] Plan =
+    [
+        (DayOfWeek.Monday, "Push", WeeklyPlanDayKind.Gym, "Chest · Shoulders · Triceps"),
+        (DayOfWeek.Tuesday, "Pull", WeeklyPlanDayKind.Gym, "Back · Biceps"),
+        (DayOfWeek.Wednesday, "Legs", WeeklyPlanDayKind.Gym, "Quads · Hamstrings · Glutes"),
+        (DayOfWeek.Thursday, "Full Body", WeeklyPlanDayKind.Gym, "Compound lifts · Core"),
+        (DayOfWeek.Friday, "Walk", WeeklyPlanDayKind.Activity, "30–60 min · Keep it easy"),
+        (DayOfWeek.Saturday, "Swim", WeeklyPlanDayKind.Activity, "20–45 min · Steady pace"),
+        (DayOfWeek.Sunday, "Rest", WeeklyPlanDayKind.Rest, "Recover · Be ready for next week")
+    ];
+
+    public static WeeklyPlanState Build(IReadOnlyList<WeeklyPlanTemplateSummary> templates)
+    {
+        var days = Plan.Select((plan, index) =>
+        {
+            var template = templates.FirstOrDefault(x => string.Equals(x.Name, plan.Title, StringComparison.OrdinalIgnoreCase));
+            return new WeeklyPlanDay(
+                plan.Day.ToString(),
+                index + 1,
+                plan.Kind,
+                plan.Title,
+                plan.Detail,
+                template?.Id,
+                plan.Kind == WeeklyPlanDayKind.Gym && template is not null,
+                plan.Kind == WeeklyPlanDayKind.Activity,
+                plan.Day.ToString()[..3],
+                plan.Kind switch
+                {
+                    WeeklyPlanDayKind.Gym => "plan_dumbbell.svg",
+                    WeeklyPlanDayKind.Activity when plan.Title == "Walk" => "plan_walk.svg",
+                    WeeklyPlanDayKind.Activity => "plan_swim.svg",
+                    _ => "plan_rest.svg"
+                },
+                plan.Kind switch
+                {
+                    WeeklyPlanDayKind.Gym => "Start workout",
+                    WeeklyPlanDayKind.Activity => "Log activity",
+                    _ => "Rest"
+                });
+        }).ToList();
+
+        return new WeeklyPlanState { Days = days };
+    }
+}

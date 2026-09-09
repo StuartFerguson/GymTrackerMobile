@@ -117,7 +117,7 @@ public sealed class DashboardPage : ContentPage
             ColumnSpacing = 10
         };
         grid.Add(CreateActionTile("dashboard_add.svg", "Log activity", _viewModel.LogActivityCommand), 0, 0);
-        grid.Add(CreateActionTile("dashboard_plan.svg", "Plan"), 1, 0);
+        grid.Add(CreateActionTile("dashboard_plan.svg", "Plan", _viewModel.WeeklyPlanCommand), 1, 0);
         grid.Add(CreateActionTile("dashboard_history.svg", "History"), 2, 0);
         grid.Add(CreateActionTile("dashboard_more.svg", "More"), 3, 0);
         return grid;
