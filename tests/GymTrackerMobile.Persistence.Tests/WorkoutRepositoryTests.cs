@@ -27,6 +27,24 @@ public sealed class WorkoutRepositoryTests
     }
 
     [Fact]
+    public async Task Starting_the_same_template_twice_creates_distinct_sessions()
+    {
+        await using var context = await CreateContextAsync();
+        var repository = new WorkoutRepository(context);
+        var template = await context.WorkoutTemplates.FirstAsync();
+        var firstStartedAt = DateTime.UtcNow;
+
+        var first = await repository.StartWorkoutAsync(template.Id, firstStartedAt);
+        await repository.CompleteWorkoutAsync(first.Id, firstStartedAt.AddMinutes(45), null);
+        var second = await repository.StartWorkoutAsync(template.Id, firstStartedAt.AddDays(1));
+
+        Assert.NotEqual(first.Id, second.Id);
+        Assert.Equal(template.Id, first.TemplateId);
+        Assert.Equal(template.Id, second.TemplateId);
+        Assert.NotEqual(first.StartedAtUtc, second.StartedAtUtc);
+    }
+
+    [Fact]
     public async Task Active_workout_and_sets_survive_context_reopen()
     {
         var path = Path.Combine(Path.GetTempPath(), $"gym-tracker-{Guid.NewGuid():N}.db");
