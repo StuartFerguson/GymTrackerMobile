@@ -48,7 +48,7 @@ public sealed class HistoryPage : ContentPage
         Title = "History";
         BackgroundColor = Color.FromArgb("#F8FBFF");
         var layout = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
-        layout.Add(new ScrollView { Content = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 28), Spacing = 16, Children = { new Label { Text = "History", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = "Review your completed workouts.", FontSize = 18, TextColor = Muted }, _items } } }, 0, 0);
+        layout.Add(new ScrollView { Content = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 28), Spacing = 16, Children = { new Label { Text = "History", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = "Review your completed workouts and activities.", FontSize = 18, TextColor = Muted }, _items } } }, 0, 0);
         layout.Add(BuildBottomNavigation(), 0, 1);
         Content = layout;
     }
@@ -60,13 +60,13 @@ public sealed class HistoryPage : ContentPage
         _items.Children.Clear();
         if (_viewModel.Items.Count == 0)
         {
-            _items.Children.Add(new Border { BackgroundColor = Colors.White, StrokeThickness = 0, Padding = 20, Content = new Label { Text = "Your completed workouts will appear here.", TextColor = Muted, FontSize = 16 } });
+            _items.Children.Add(new Border { BackgroundColor = Colors.White, StrokeThickness = 0, Padding = 20, Content = new Label { Text = "Your completed workouts and activities will appear here.", TextColor = Muted, FontSize = 16 } });
             return;
         }
         foreach (var item in _viewModel.Items) _items.Children.Add(BuildItem(item));
     }
 
-    private static View BuildItem(HistoryWorkoutItem item)
+    private static View BuildItem(HistoryItem item)
     {
         var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(16, 14), StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 } };
         card.Content = new Grid
@@ -74,12 +74,12 @@ public sealed class HistoryPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(90) },
             Children =
             {
-                new VerticalStackLayout { Spacing = 4, Children = { new Label { Text = item.Name, FontSize = 20, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = item.CompletedAtLocal.ToString("ddd, dd MMM yyyy · HH:mm"), FontSize = 15, TextColor = Muted }, new Label { Text = $"{item.CompletedSets} / {item.PlannedSets} sets", FontSize = 15, TextColor = Teal } } },
+                new VerticalStackLayout { Spacing = 4, Children = { new Label { Text = item.Name, FontSize = 20, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = item.OccurredAtLocal.ToString("ddd, dd MMM yyyy · HH:mm"), FontSize = 15, TextColor = Muted }, new Label { Text = item.Details, FontSize = 15, TextColor = Teal }, new Label { Text = item.Notes, FontSize = 14, TextColor = Muted, IsVisible = !string.IsNullOrWhiteSpace(item.Notes) } } },
                 new Label { Text = "›", FontSize = 34, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center }
             }
         };
         var tap = new TapGestureRecognizer();
-        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync($"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}");
+        if (item.IsWorkout) tap.Tapped += async (_, _) => await Shell.Current.GoToAsync($"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}");
         card.GestureRecognizers.Add(tap);
         return card;
     }
