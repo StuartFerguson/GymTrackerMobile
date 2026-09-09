@@ -40,10 +40,32 @@ public sealed class HistoryViewModelTests
         Assert.Empty(viewModel.Items);
     }
 
+    [Fact]
+    public async Task History_exposes_recoverable_load_error()
+    {
+        var viewModel = new HistoryViewModel(new FailingWorkoutRepository(), new RecordingActivityRepository([]));
+
+        await viewModel.LoadAsync();
+
+        Assert.Equal("History could not be loaded.", viewModel.ErrorMessage);
+        Assert.False(viewModel.IsLoading);
+    }
+
     private sealed class RecordingWorkoutRepository(IReadOnlyList<WorkoutSession> sessions) : IWorkoutRepository
     {
         public Task<IReadOnlyList<WorkoutSession>> GetCompletedWorkoutsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default) => Task.FromResult(sessions);
         public Task<IReadOnlyList<WorkoutTemplate>> GetTemplatesAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<WorkoutTemplate>>([]);
+        public Task<WorkoutSession> StartWorkoutAsync(Guid templateId, DateTime startedAtUtc, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task CompleteWorkoutAsync(Guid sessionId, DateTime completedAtUtc, string? notes, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    }
+
+    private sealed class FailingWorkoutRepository : IWorkoutRepository
+    {
+        public Task<IReadOnlyList<WorkoutSession>> GetCompletedWorkoutsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default) =>
+            Task.FromException<IReadOnlyList<WorkoutSession>>(new InvalidOperationException("Storage unavailable"));
+        public Task<IReadOnlyList<WorkoutTemplate>> GetTemplatesAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<WorkoutSession> StartWorkoutAsync(Guid templateId, DateTime startedAtUtc, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();

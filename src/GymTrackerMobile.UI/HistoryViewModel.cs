@@ -22,29 +22,44 @@ public sealed record HistoryItem(
 public sealed class HistoryViewModel(IWorkoutRepository workouts, IActivityRepository activities)
 {
     public IReadOnlyList<HistoryItem> Items { get; private set; } = [];
+    public bool IsLoading { get; private set; }
+    public string? ErrorMessage { get; private set; }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        var fromUtc = DateTime.UtcNow.AddYears(-10);
-        var toUtc = DateTime.UtcNow.AddDays(1);
-        var sessions = await workouts.GetCompletedWorkoutsAsync(fromUtc, toUtc, cancellationToken);
-        var activityRecords = await activities.GetActivitiesAsync(fromUtc, toUtc, cancellationToken);
-
-        var workoutItems = sessions.Where(x => !x.IsActive && x.CompletedAtUtc is not null).Select(x =>
+        IsLoading = true;
+        ErrorMessage = null;
+        try
         {
-            var completedSets = x.Exercises.SelectMany(y => y.Sets).Count(y => y.Status == SetStatus.Completed);
-            var plannedSets = x.Exercises.Sum(y => y.PlannedSetCount);
-            return new HistoryItem(HistoryItemKind.Workout, x.Id, x.TemplateName, x.CompletedAtUtc!.Value.ToLocalTime(), $"{completedSets} / {plannedSets} sets", x.Notes, completedSets, plannedSets);
-        });
-        var activityItems = activityRecords.Select(x => new HistoryItem(
-            HistoryItemKind.Activity,
-            x.Id,
-            x.ActivityType.ToString(),
-            x.ActivityDateUtc.ToLocalTime(),
-            BuildActivityDetails(x),
-            x.Notes));
+            var fromUtc = DateTime.UtcNow.AddYears(-10);
+            var toUtc = DateTime.UtcNow.AddDays(1);
+            var sessions = await workouts.GetCompletedWorkoutsAsync(fromUtc, toUtc, cancellationToken);
+            var activityRecords = await activities.GetActivitiesAsync(fromUtc, toUtc, cancellationToken);
 
-        Items = workoutItems.Concat(activityItems).OrderByDescending(x => x.OccurredAtLocal).ToList();
+            var workoutItems = sessions.Where(x => !x.IsActive && x.CompletedAtUtc is not null).Select(x =>
+            {
+                var completedSets = x.Exercises.SelectMany(y => y.Sets).Count(y => y.Status == SetStatus.Completed);
+                var plannedSets = x.Exercises.Sum(y => y.PlannedSetCount);
+                return new HistoryItem(HistoryItemKind.Workout, x.Id, x.TemplateName, x.CompletedAtUtc!.Value.ToLocalTime(), $"{completedSets} / {plannedSets} sets", x.Notes, completedSets, plannedSets);
+            });
+            var activityItems = activityRecords.Select(x => new HistoryItem(
+                HistoryItemKind.Activity,
+                x.Id,
+                x.ActivityType.ToString(),
+                x.ActivityDateUtc.ToLocalTime(),
+                BuildActivityDetails(x),
+                x.Notes));
+
+            Items = workoutItems.Concat(activityItems).OrderByDescending(x => x.OccurredAtLocal).ToList();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ErrorMessage = "History could not be loaded.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private static string BuildActivityDetails(ActivityRecord activity)
