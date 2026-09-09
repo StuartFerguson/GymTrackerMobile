@@ -32,11 +32,11 @@ public static class WeeklyPlanStateBuilder
     private static readonly (DayOfWeek Day, string Title, WeeklyPlanDayKind Kind, string Detail)[] Plan =
     [
         (DayOfWeek.Monday, "Push", WeeklyPlanDayKind.Gym, "Chest · Shoulders · Triceps"),
-        (DayOfWeek.Tuesday, "Pull", WeeklyPlanDayKind.Gym, "Back · Biceps"),
-        (DayOfWeek.Wednesday, "Legs", WeeklyPlanDayKind.Gym, "Quads · Hamstrings · Glutes"),
-        (DayOfWeek.Thursday, "Full Body", WeeklyPlanDayKind.Gym, "Compound lifts · Core"),
-        (DayOfWeek.Friday, "Walk", WeeklyPlanDayKind.Activity, "30–60 min · Keep it easy"),
-        (DayOfWeek.Saturday, "Swim", WeeklyPlanDayKind.Activity, "20–45 min · Steady pace"),
+        (DayOfWeek.Tuesday, "Walk", WeeklyPlanDayKind.Activity, "30–60 min · Keep it easy"),
+        (DayOfWeek.Wednesday, "Pull", WeeklyPlanDayKind.Gym, "Back · Biceps"),
+        (DayOfWeek.Thursday, "Swim", WeeklyPlanDayKind.Activity, "20–45 min · Steady pace"),
+        (DayOfWeek.Friday, "Legs", WeeklyPlanDayKind.Gym, "Quads · Hamstrings · Glutes"),
+        (DayOfWeek.Saturday, "Full Body", WeeklyPlanDayKind.Gym, "Compound lifts · Core"),
         (DayOfWeek.Sunday, "Rest", WeeklyPlanDayKind.Rest, "Recover · Be ready for next week")
     ];
 
