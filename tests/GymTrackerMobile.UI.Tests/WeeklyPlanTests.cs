@@ -53,8 +53,18 @@ public sealed class WeeklyPlanTests
         var days = WeeklyPlanStateBuilder.Build([]).Days;
 
         Assert.Equal(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], days.Select(x => x.ShortDayName));
-        Assert.Equal(["plan_dumbbell.svg", "plan_dumbbell.svg", "plan_dumbbell.svg", "plan_dumbbell.svg", "plan_walk.svg", "plan_swim.svg", "plan_rest.svg"], days.Select(x => x.IconSource));
+        Assert.Equal(["neutral_workout_push.png", "neutral_workout_pull.png", "neutral_workout_legs.png", "neutral_workout_full_body.png", "neutral_activity_walk.png", "neutral_activity_swim.png", "neutral_activity_rest.png"], days.Select(x => x.IconSource));
         Assert.Equal(["Start workout", "Start workout", "Start workout", "Start workout", "Log activity", "Log activity", "Rest"], days.Select(x => x.ActionLabel));
+    }
+
+    [Fact]
+    public void Weekly_plan_uses_the_same_selected_style_for_workouts_and_activities()
+    {
+        var days = WeeklyPlanStateBuilder.Build([], IllustrationStyle.Male).Days;
+
+        Assert.Equal("male_workout_push.png", days[0].IconSource);
+        Assert.Equal("male_activity_walk.png", days[4].IconSource);
+        Assert.Equal("male_activity_rest.png", days[6].IconSource);
     }
 
     [Fact]

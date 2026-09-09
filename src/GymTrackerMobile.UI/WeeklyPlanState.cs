@@ -40,7 +40,7 @@ public static class WeeklyPlanStateBuilder
         (DayOfWeek.Sunday, "Rest", WeeklyPlanDayKind.Rest, "Recover · Be ready for next week")
     ];
 
-    public static WeeklyPlanState Build(IReadOnlyList<WeeklyPlanTemplateSummary> templates)
+    public static WeeklyPlanState Build(IReadOnlyList<WeeklyPlanTemplateSummary> templates, IllustrationStyle style = IllustrationStyle.Neutral)
     {
         var days = Plan.Select((plan, index) =>
         {
@@ -55,13 +55,19 @@ public static class WeeklyPlanStateBuilder
                 plan.Kind == WeeklyPlanDayKind.Gym && template is not null,
                 plan.Kind == WeeklyPlanDayKind.Activity,
                 plan.Day.ToString()[..3],
-                plan.Kind switch
+                IllustrationAssetResolver.Resolve(style, plan.Kind switch
                 {
-                    WeeklyPlanDayKind.Gym => "plan_dumbbell.svg",
-                    WeeklyPlanDayKind.Activity when plan.Title == "Walk" => "plan_walk.svg",
-                    WeeklyPlanDayKind.Activity => "plan_swim.svg",
-                    _ => "plan_rest.svg"
-                },
+                    WeeklyPlanDayKind.Gym => plan.Title switch
+                    {
+                        "Push" => IllustrationAssetKey.Push,
+                        "Pull" => IllustrationAssetKey.Pull,
+                        "Legs" => IllustrationAssetKey.Legs,
+                        _ => IllustrationAssetKey.FullBody
+                    },
+                    WeeklyPlanDayKind.Activity when plan.Title == "Walk" => IllustrationAssetKey.Walk,
+                    WeeklyPlanDayKind.Activity => IllustrationAssetKey.Swim,
+                    _ => IllustrationAssetKey.Rest
+                }),
                 plan.Kind switch
                 {
                     WeeklyPlanDayKind.Gym => "Start workout",
