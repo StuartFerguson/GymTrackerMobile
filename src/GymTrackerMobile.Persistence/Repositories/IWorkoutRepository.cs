@@ -10,4 +10,6 @@ public interface IWorkoutRepository
     Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default);
     Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default);
     Task CompleteWorkoutAsync(Guid sessionId, DateTime completedAtUtc, string? notes, CancellationToken cancellationToken = default);
+    Task AbandonWorkoutAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This repository does not support abandoning workouts.");
 }

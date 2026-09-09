@@ -45,11 +45,22 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), BuildRecommendation(), BuildNavigation() } };
     }
 
-    private static View BuildHeader()
+    private View BuildHeader()
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(44) } };
+        var finish = new Button { Text = "Finish", FontSize = 14, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 16, Padding = new Thickness(12, 4) };
+        finish.Clicked += async (_, _) => { await _viewModel.CompleteAsync(); await Shell.Current.GoToAsync(".."); };
+        var abandon = new Button { Text = "Abandon", FontSize = 14, BackgroundColor = Colors.White, TextColor = Color.FromArgb("#B42318"), BorderColor = Color.FromArgb("#F0B4AE"), BorderWidth = 1, CornerRadius = 16, Padding = new Thickness(10, 4) };
+        abandon.Clicked += async (_, _) =>
+        {
+            if (await DisplayAlertAsync("Abandon workout?", "Your in-progress workout will be discarded. Completed workouts are not affected.", "Abandon", "Keep working"))
+            {
+                await _viewModel.AbandonAsync();
+                await Shell.Current.GoToAsync("..");
+            }
+        };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         grid.Add(new Label { Text = "‹  Workout", FontSize = 27, FontAttributes = FontAttributes.Bold, TextColor = Ink }, 0, 0);
-        grid.Add(new Label { Text = "⋮", FontSize = 32, TextColor = Ink, HorizontalTextAlignment = TextAlignment.End }, 1, 0);
+        grid.Add(new HorizontalStackLayout { Spacing = 6, Children = { abandon, finish } }, 1, 0);
         return grid;
     }
 
@@ -78,13 +89,14 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
     {
         var weight = new Entry { Text = set.WeightKilograms?.ToString("0.##"), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
         var reps = new Entry { Text = set.Repetitions?.ToString(), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
+        var notes = new Entry { Text = set.Notes, Placeholder = "Notes (optional)", FontSize = 15, TextColor = Muted, BackgroundColor = Colors.White };
         var save = new Button { Text = set.Status == SetStatus.Completed ? "✓  Complete" : "Mark complete", FontSize = 14, BackgroundColor = set.Status == SetStatus.Completed ? Teal : Colors.White, TextColor = set.Status == SetStatus.Completed ? Colors.White : Ink, BorderColor = Color.FromArgb("#D5E0EC"), BorderWidth = 1, CornerRadius = 16, Padding = 4 };
-        save.Clicked += async (_, _) => { await _viewModel.UpdateSetAsync(set.SetNumber, exercise.ShowsWeight && double.TryParse(weight.Text, out var parsedWeight) ? parsedWeight : null, int.TryParse(exercise.ShowsWeight ? reps.Text : weight.Text, out var parsedReps) ? parsedReps : null); await _viewModel.SaveSetAsync(set.SetNumber); Render(); };
+        save.Clicked += async (_, _) => { await _viewModel.UpdateSetAsync(set.SetNumber, exercise.ShowsWeight && double.TryParse(weight.Text, out var parsedWeight) ? parsedWeight : null, int.TryParse(exercise.ShowsWeight ? reps.Text : weight.Text, out var parsedReps) ? parsedReps : null, notes.Text); await _viewModel.SaveSetAsync(set.SetNumber); Render(); };
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(34), new(GridLength.Star), new(GridLength.Star), new(118) }, ColumnSpacing = 8 };
         grid.Add(new Label { Text = set.SetNumber.ToString(), FontSize = 20, FontAttributes = FontAttributes.Bold, TextColor = Ink, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
         if (exercise.ShowsWeight) { grid.Add(EntryCard(weight), 1, 0); grid.Add(EntryCard(reps), 2, 0); grid.Add(save, 3, 0); }
         else { grid.Add(EntryCard(reps), 1, 0); grid.Add(save, 2, 0); Grid.SetColumnSpan(save, 2); }
-        return grid;
+        return new VerticalStackLayout { Spacing = 2, Children = { grid, notes } };
     }
 
     private static View EntryCard(Entry entry) => new Border { Stroke = Color.FromArgb("#D5E0EC"), StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 14 }, Padding = 0, Content = entry };
