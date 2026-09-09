@@ -37,7 +37,7 @@ public sealed class ActivityLogViewModel(IActivityRepository activities, IDataba
                 ActivityType = State.ActivityType!.Value,
                 DurationMinutes = ParseInt(DurationText),
                 DistanceKilometres = State.ActivityType == ActivityType.Swimming
-                    ? ParseInt(PoolLengthText)!.Value * ParseInt(PoolLengthsText)!.Value / 1000d
+                    ? CalculateSwimmingDistance()
                     : ParseDouble(DistanceText),
                 Steps = ParseInt(StepsText),
                 PoolLengthMetres = State.ActivityType == ActivityType.Swimming ? ParseInt(PoolLengthText) : null,
@@ -61,8 +61,8 @@ public sealed class ActivityLogViewModel(IActivityRepository activities, IDataba
             DurationError = ValidateInt(DurationText, "Duration must be a whole number of minutes greater than zero.", requirePositive: true),
             DistanceError = State.ActivityType == ActivityType.Swimming ? null : ValidateDouble(DistanceText, "Distance must be zero or greater."),
             StepsError = ValidateInt(StepsText, "Steps must be a whole number of zero or greater.", requirePositive: false),
-            PoolLengthError = State.ActivityType == ActivityType.Swimming ? ValidateRequiredInt(PoolLengthText, "Enter the pool length in metres.") : null,
-            PoolLengthsError = State.ActivityType == ActivityType.Swimming ? ValidateRequiredInt(PoolLengthsText, "Enter the number of lengths.") : null
+            PoolLengthError = State.ActivityType == ActivityType.Swimming ? ValidateOptionalPositiveInt(PoolLengthText, "Pool length must be a whole number greater than zero.") : null,
+            PoolLengthsError = State.ActivityType == ActivityType.Swimming ? ValidateOptionalPositiveInt(PoolLengthsText, "Lengths must be a whole number greater than zero.") : null
         };
         return next.ActivityTypeError is null && next.DateError is null && next.DurationError is null && next.DistanceError is null && next.StepsError is null && next.PoolLengthError is null && next.PoolLengthsError is null ? null : next;
     }
@@ -79,9 +79,14 @@ public sealed class ActivityLogViewModel(IActivityRepository activities, IDataba
         return !double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result) || result < 0 ? message : null;
     }
 
-    private static string? ValidateRequiredInt(string value, string message) =>
-        !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) || result <= 0 ? message : null;
+    private static string? ValidateOptionalPositiveInt(string value, string message) =>
+        string.IsNullOrWhiteSpace(value) ? null : !int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) || result <= 0 ? message : null;
 
     private static int? ParseInt(string value) => string.IsNullOrWhiteSpace(value) ? null : int.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
     private static double? ParseDouble(string value) => string.IsNullOrWhiteSpace(value) ? null : double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+    private double? CalculateSwimmingDistance() =>
+        ParseInt(PoolLengthText) is int poolLength && ParseInt(PoolLengthsText) is int lengths
+            ? poolLength * lengths / 1000d
+            : null;
 }

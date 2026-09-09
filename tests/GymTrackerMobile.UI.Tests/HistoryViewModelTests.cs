@@ -17,7 +17,7 @@ public sealed class HistoryViewModelTests
         var activity = new ActivityRecord
         {
             ActivityDateUtc = DateTime.UtcNow.AddHours(-2), ActivityType = ActivityType.Walking,
-            DurationMinutes = 30, Notes = "Easy pace", Steps = 4000
+            DurationMinutes = 90, Notes = "Easy pace", Steps = 4000
         };
         var viewModel = new HistoryViewModel(new RecordingWorkoutRepository([workout]), new RecordingActivityRepository([activity]));
 
@@ -25,7 +25,7 @@ public sealed class HistoryViewModelTests
 
         Assert.Equal([HistoryItemKind.Activity, HistoryItemKind.Workout], viewModel.Items.Select(x => x.Kind));
         Assert.Equal("Easy pace", viewModel.Items[0].Notes);
-        Assert.Contains("30 min", viewModel.Items[0].Details);
+        Assert.Contains("1h 30m", viewModel.Items[0].Details);
         Assert.Equal("1 / 1 sets", viewModel.Items[1].Details);
     }
 

@@ -98,8 +98,8 @@ public sealed class LogActivityPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
             ColumnSpacing = 14
         };
-        swimGrid.Add(BuildMetric("Pool length (m)", _poolLength, _poolLengthError), 0, 0);
-        swimGrid.Add(BuildMetric("Lengths", _poolLengths, _poolLengthsError), 1, 0);
+        swimGrid.Add(BuildMetric("Pool length (m, optional)", _poolLength, _poolLengthError), 0, 0);
+        swimGrid.Add(BuildMetric("Lengths (optional)", _poolLengths, _poolLengthsError), 1, 0);
         _swimmingFields = new VerticalStackLayout
         {
             Spacing = 8,

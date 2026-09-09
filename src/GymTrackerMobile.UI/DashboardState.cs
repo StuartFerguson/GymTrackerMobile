@@ -36,7 +36,7 @@ public static class DashboardStateBuilder
             .Select(x => new DashboardRecentItem(x.Name, "Workout", x.CompletedAtUtc))
             .Concat(activities.Select(x => new DashboardRecentItem(
                 x.Type.ToString(),
-                x.DurationMinutes is null ? "Activity" : $"Activity · {x.DurationMinutes} min",
+                x.DurationMinutes is null ? "Activity" : $"Activity · {FormatDuration(x.DurationMinutes.Value)}",
                 x.ActivityDateUtc)))
             .OrderByDescending(x => x.DateUtc)
             .Take(5)
@@ -77,6 +77,8 @@ public static class DashboardStateBuilder
     }
 
     private static string Pluralize(int count, string singular, string plural) => count == 1 ? singular : plural;
+
+    private static string FormatDuration(int durationMinutes) => $"{durationMinutes / 60}h {durationMinutes % 60}m";
 
     private sealed record PlannedDay(DateTime Date, string Name, Guid? TemplateId);
 }
