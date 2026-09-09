@@ -19,6 +19,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(GymTrackerMobile.UI.WeeklyPlanRoutes.Page, typeof(GymTrackerMobile.UI.WeeklyPlanPage));
         Routing.RegisterRoute(GymTrackerMobile.UI.NavigationRoutes.History, typeof(GymTrackerMobile.UI.HistoryPage));
         Routing.RegisterRoute(GymTrackerMobile.UI.NavigationRoutes.WorkoutSummary, typeof(GymTrackerMobile.UI.WorkoutSummaryPage));
+        Routing.RegisterRoute(GymTrackerMobile.UI.NavigationRoutes.ActivitySummary, typeof(GymTrackerMobile.UI.ActivitySummaryPage));
         Routing.RegisterRoute(GymTrackerMobile.UI.NavigationRoutes.ExerciseProgress, typeof(GymTrackerMobile.UI.ExerciseProgressPage));
         Routing.RegisterRoute(GymTrackerMobile.UI.NavigationRoutes.BackupSettings, typeof(GymTrackerMobile.UI.BackupSettingsPage));
     }

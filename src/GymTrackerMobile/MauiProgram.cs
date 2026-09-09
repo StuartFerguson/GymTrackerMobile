@@ -33,6 +33,8 @@ public static class MauiProgram
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<WorkoutSummaryPage>();
         builder.Services.AddTransient<WorkoutSummaryViewModel>();
+        builder.Services.AddTransient<ActivitySummaryPage>();
+        builder.Services.AddTransient<ActivitySummaryViewModel>();
         builder.Services.AddTransient<ExerciseProgressPage>();
         builder.Services.AddTransient<ExerciseProgressViewModel>();
         builder.Services.AddTransient<BackupSettingsPage>();

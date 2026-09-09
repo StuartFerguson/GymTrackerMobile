@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace GymTrackerMobile.UI;
 
@@ -41,6 +42,8 @@ public sealed class HistoryPage : ContentPage
     private static readonly Color Teal = Color.FromArgb("#169F9A");
     private readonly HistoryViewModel _viewModel;
     private readonly VerticalStackLayout _items = new() { Spacing = 12 };
+    private readonly Label _stateMessage = new() { FontSize = 16, TextColor = Muted, IsVisible = false };
+    private readonly Button _retry = new() { Text = "Try again", BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 22, IsVisible = false };
 
     public HistoryPage(HistoryViewModel viewModel)
     {
@@ -48,7 +51,8 @@ public sealed class HistoryPage : ContentPage
         Title = "History";
         BackgroundColor = Color.FromArgb("#F8FBFF");
         var layout = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
-        layout.Add(new ScrollView { Content = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 28), Spacing = 16, Children = { new Label { Text = "History", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = "Review your completed workouts and activities.", FontSize = 18, TextColor = Muted }, _items } } }, 0, 0);
+        _retry.Clicked += async (_, _) => await LoadAndRenderAsync();
+        layout.Add(new ScrollView { Content = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 28), Spacing = 16, Children = { new Label { Text = "History", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = "Review your completed workouts and activities.", FontSize = 18, TextColor = Muted }, _stateMessage, _retry, _items } } }, 0, 0);
         layout.Add(BuildBottomNavigation(), 0, 1);
         Content = layout;
     }
@@ -56,33 +60,123 @@ public sealed class HistoryPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await LoadAndRenderAsync();
+    }
+
+    private async Task LoadAndRenderAsync()
+    {
+        _retry.IsVisible = false;
+        _stateMessage.IsVisible = true;
+        _stateMessage.Text = "Loading history…";
         await _viewModel.LoadAsync();
         _items.Children.Clear();
-        if (_viewModel.Items.Count == 0)
+        if (_viewModel.ErrorMessage is not null)
         {
-            _items.Children.Add(new Border { BackgroundColor = Colors.White, StrokeThickness = 0, Padding = 20, Content = new Label { Text = "Your completed workouts and activities will appear here.", TextColor = Muted, FontSize = 16 } });
+            _stateMessage.Text = _viewModel.ErrorMessage;
+            _retry.IsVisible = true;
             return;
         }
+
+        if (_viewModel.Items.Count == 0)
+        {
+            _stateMessage.Text = "Your completed workouts and activities will appear here.";
+            return;
+        }
+        _stateMessage.IsVisible = false;
         foreach (var item in _viewModel.Items) _items.Children.Add(BuildItem(item));
     }
 
     private static View BuildItem(HistoryItem item)
     {
-        var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(16, 14), StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 } };
-        card.Content = new Grid
+        var accent = item.IsWorkout ? Teal : Color.FromArgb("#F28C38");
+        var iconBackground = item.IsWorkout ? Color.FromArgb("#E8F8F7") : Color.FromArgb("#FFF1E8");
+        var icon = new Border
         {
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(90) },
-            Children =
+            BackgroundColor = iconBackground,
+            StrokeThickness = 0,
+            WidthRequest = 54,
+            HeightRequest = 54,
+            StrokeShape = new RoundRectangle { CornerRadius = 27 },
+            Content = new Image
             {
-                new VerticalStackLayout { Spacing = 4, Children = { new Label { Text = item.Name, FontSize = 20, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = item.OccurredAtLocal.ToString("ddd, dd MMM yyyy · HH:mm"), FontSize = 15, TextColor = Muted }, new Label { Text = item.Details, FontSize = 15, TextColor = Teal }, new Label { Text = item.Notes, FontSize = 14, TextColor = Muted, IsVisible = !string.IsNullOrWhiteSpace(item.Notes) } } },
-                new Label { Text = "›", FontSize = 34, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center }
+                Source = item.IsWorkout ? "dashboard_dumbbell.svg" : ActivityIcon(item.Name),
+                WidthRequest = 32,
+                HeightRequest = 32,
+                Aspect = Aspect.AspectFit,
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center
             }
         };
+        var date = new Label
+        {
+            Text = item.OccurredAtLocal.ToString("dd MMM yyyy"),
+            FontSize = 13,
+            TextColor = Muted,
+            HorizontalTextAlignment = TextAlignment.End,
+            VerticalTextAlignment = TextAlignment.Center
+        };
+        var category = new Label { Text = item.IsWorkout ? "WORKOUT" : "ACTIVITY", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = accent };
+        var name = new Label { Text = item.Name, FontSize = 19, FontAttributes = FontAttributes.None, TextColor = Ink };
+        var itemDetails = new Label { Text = item.Details, FontSize = 14, TextColor = accent };
+        var notes = new Label { Text = item.Notes, FontSize = 13, TextColor = Muted, IsVisible = !string.IsNullOrWhiteSpace(item.Notes), LineBreakMode = LineBreakMode.WordWrap };
+        var details = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(92) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto) },
+            RowSpacing = 3,
+            ColumnSpacing = 8,
+            Children =
+            {
+                category,
+                date,
+                name,
+                itemDetails,
+                notes
+            }
+        };
+        Microsoft.Maui.Controls.Grid.SetColumn(date, 1);
+        Microsoft.Maui.Controls.Grid.SetRow(date, 0);
+        Microsoft.Maui.Controls.Grid.SetColumn(name, 0);
+        Microsoft.Maui.Controls.Grid.SetColumnSpan(name, 2);
+        Microsoft.Maui.Controls.Grid.SetRow(name, 1);
+        Microsoft.Maui.Controls.Grid.SetColumn(itemDetails, 0);
+        Microsoft.Maui.Controls.Grid.SetColumnSpan(itemDetails, 2);
+        Microsoft.Maui.Controls.Grid.SetRow(itemDetails, 2);
+        Microsoft.Maui.Controls.Grid.SetColumn(notes, 0);
+        Microsoft.Maui.Controls.Grid.SetColumnSpan(notes, 2);
+        Microsoft.Maui.Controls.Grid.SetRow(notes, 3);
+
+        var chevron = new Label { Text = "›", FontSize = 30, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center };
+        var cardContent = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection { new(64), new(GridLength.Star), new(24) },
+            ColumnSpacing = 10,
+            Children =
+            {
+                icon,
+                details,
+                chevron
+            }
+        };
+        Microsoft.Maui.Controls.Grid.SetColumn(icon, 0);
+        Microsoft.Maui.Controls.Grid.SetColumn(details, 1);
+        Microsoft.Maui.Controls.Grid.SetColumn(chevron, 2);
+
+        var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
         var tap = new TapGestureRecognizer();
-        if (item.IsWorkout) tap.Tapped += async (_, _) => await Shell.Current.GoToAsync($"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}");
+        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
+            ? $"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}"
+            : $"{NavigationRoutes.ActivitySummary}?activityId={item.Id}");
         card.GestureRecognizers.Add(tap);
         return card;
     }
+
+    private static string ActivityIcon(string activityName) => activityName switch
+    {
+        "Running" => "activity_walk.png",
+        "Swimming" => "activity_swim.png",
+        _ => "activity_walk.png"
+    };
 
     private static View BuildBottomNavigation() => new Grid
     {
