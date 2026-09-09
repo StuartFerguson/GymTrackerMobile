@@ -24,9 +24,12 @@ public static class MauiProgram
         builder.Services.AddTransient<StartupPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<StartWorkoutPage>();
+        builder.Services.AddTransient<ActiveWorkoutPage>();
         builder.Services.AddTransient<LogActivityPage>();
         builder.Services.AddTransient<WeeklyPlanPage>();
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<StartWorkoutViewModel>();
+        builder.Services.AddTransient<IllustrationPreferenceViewModel>();
         builder.Services.AddTransient<WeeklyPlanViewModel>();
         var databasePath = Path.Combine(FileSystem.AppDataDirectory, "gym-tracker.db");
         builder.Services.AddGymTrackerPersistence(databasePath);
