@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<ISettingsRepository, SettingsRepository>();
         services.AddScoped<IBackupMetadataRepository, BackupMetadataRepository>();
+        services.AddScoped<IAppDataResetService, AppDataResetService>();
         return services;
     }
 }

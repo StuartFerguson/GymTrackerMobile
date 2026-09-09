@@ -65,6 +65,9 @@ public sealed class DashboardPage : ContentPage
         grid.Add(new Label { Text = "Gym Tracker", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Ink }, 0, 0);
         grid.Add(new Label { Text = "Dashboard", FontSize = 28, TextColor = Muted }, 0, 1);
         var settings = new Image { Source = "dashboard_settings.svg", WidthRequest = 36, HeightRequest = 36, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+        var settingsTap = new TapGestureRecognizer();
+        settingsTap.Tapped += (_, _) => _viewModel.SettingsCommand.Execute(null);
+        settings.GestureRecognizers.Add(settingsTap);
         grid.Add(settings, 1, 0);
         Grid.SetRowSpan(settings, 2);
         return grid;
@@ -119,7 +122,7 @@ public sealed class DashboardPage : ContentPage
         grid.Add(CreateActionTile("dashboard_add.svg", "Log activity", _viewModel.LogActivityCommand), 0, 0);
         grid.Add(CreateActionTile("dashboard_plan.svg", "Plan", _viewModel.WeeklyPlanCommand), 1, 0);
         grid.Add(CreateActionTile("dashboard_history.svg", "History"), 2, 0);
-        grid.Add(CreateActionTile("dashboard_more.svg", "More"), 3, 0);
+        grid.Add(CreateActionTile("dashboard_more.svg", "More", _viewModel.SettingsCommand), 3, 0);
         return grid;
     }
 
@@ -163,7 +166,7 @@ public sealed class DashboardPage : ContentPage
         }
     };
 
-    private static View BuildBottomNavigation()
+    private View BuildBottomNavigation()
     {
         var grid = new Grid
         {
@@ -174,7 +177,7 @@ public sealed class DashboardPage : ContentPage
         grid.Add(CreateNavigationItem("dashboard_home.svg", "Home", true), 0, 0);
         grid.Add(CreateNavigationItem("dashboard_plan.svg", "Plan", false), 1, 0);
         grid.Add(CreateNavigationItem("dashboard_history.svg", "History", false), 2, 0);
-        grid.Add(CreateNavigationItem("dashboard_more.svg", "More", false), 3, 0);
+        grid.Add(CreateNavigationItem("dashboard_more.svg", "More", false, _viewModel.SettingsCommand), 3, 0);
         return grid;
     }
 
@@ -204,16 +207,27 @@ public sealed class DashboardPage : ContentPage
         return tile;
     }
 
-    private static View CreateNavigationItem(string image, string title, bool selected) => new VerticalStackLayout
+    private static View CreateNavigationItem(string image, string title, bool selected, System.Windows.Input.ICommand? command = null)
     {
-        Spacing = 3,
-        HorizontalOptions = LayoutOptions.Center,
-        Children =
+        var item = new VerticalStackLayout
         {
-            new Image { Source = image, WidthRequest = 28, HeightRequest = 28, Opacity = selected ? 1 : 0.75 },
-            new Label { Text = title, FontSize = 13, TextColor = selected ? Teal : Muted, HorizontalTextAlignment = TextAlignment.Center }
+            Spacing = 3,
+            HorizontalOptions = LayoutOptions.Center,
+            Children =
+            {
+                new Image { Source = image, WidthRequest = 28, HeightRequest = 28, Opacity = selected ? 1 : 0.75 },
+                new Label { Text = title, FontSize = 13, TextColor = selected ? Teal : Muted, HorizontalTextAlignment = TextAlignment.Center }
+            }
+        };
+        if (command is not null)
+        {
+            var tap = new TapGestureRecognizer();
+            tap.Tapped += (_, _) => command.Execute(null);
+            item.GestureRecognizers.Add(tap);
         }
-    };
+
+        return item;
+    }
 
     private static Button CreatePrimaryButton(string text) => new()
     {
