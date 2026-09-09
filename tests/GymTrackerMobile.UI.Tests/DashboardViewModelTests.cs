@@ -40,6 +40,22 @@ public sealed class DashboardViewModelTests
         Assert.Equal([NavigationRoutes.BackupSettings], routes);
     }
 
+    [Fact]
+    public async Task Progress_command_navigates_to_exercise_progress()
+    {
+        var routes = new List<string>();
+        var viewModel = new DashboardViewModel(
+            new RecordingWorkoutRepository([]),
+            new RecordingActivityRepository([]),
+            new RecordingDatabaseInitializer([]),
+            route => { routes.Add(route); return Task.CompletedTask; });
+
+        viewModel.ProgressCommand.Execute(null);
+        await Task.Yield();
+
+        Assert.Equal([NavigationRoutes.ExerciseProgress], routes);
+    }
+
     private sealed class RecordingDatabaseInitializer(List<string> events) : IDatabaseInitializer
     {
         public Task InitializeAsync(CancellationToken cancellationToken = default)

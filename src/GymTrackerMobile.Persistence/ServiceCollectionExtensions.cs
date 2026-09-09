@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<IDatabaseInitializer>(services => services.GetRequiredService<DatabaseInitializer>());
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+        services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<ISettingsRepository, SettingsRepository>();
         services.AddScoped<IBackupMetadataRepository, BackupMetadataRepository>();

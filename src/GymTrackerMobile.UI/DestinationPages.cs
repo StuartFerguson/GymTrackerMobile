@@ -99,8 +99,6 @@ public sealed class HistoryPage : ContentPage
     }
 }
 
-public sealed class ExerciseProgressPage() : DestinationPage(DestinationPageContent.ExerciseProgress);
-
 public sealed class BackupSettingsPage : DestinationPage
 {
     private readonly DeveloperResetViewModel _viewModel;
