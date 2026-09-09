@@ -37,6 +37,27 @@ public sealed class ActivityLogViewModelTests
         Assert.Equal("Easy pace", repository.Saved.Notes);
     }
 
+    [Theory]
+    [InlineData(ActivityType.Walking)]
+    [InlineData(ActivityType.Running)]
+    [InlineData(ActivityType.Swimming)]
+    public async Task Saves_a_minimum_activity_with_only_date_and_type(ActivityType type)
+    {
+        var repository = new RecordingActivityRepository();
+        var viewModel = new ActivityLogViewModel(repository, new NoOpDatabaseInitializer());
+        viewModel.SelectActivityType(type);
+        viewModel.SetDate(new DateTime(2026, 9, 9));
+
+        await viewModel.SaveAsync();
+
+        Assert.True(viewModel.State.IsSaved);
+        Assert.Equal(type, repository.Saved!.ActivityType);
+        Assert.Null(repository.Saved.DurationMinutes);
+        Assert.Null(repository.Saved.DistanceKilometres);
+        Assert.Null(repository.Saved.Steps);
+        Assert.Null(repository.Saved.Notes);
+    }
+
     [Fact]
     public async Task Invalid_optional_values_show_field_errors_and_preserve_valid_inputs()
     {
@@ -106,16 +127,18 @@ public sealed class ActivityLogViewModelTests
     }
 
     [Fact]
-    public async Task Swimming_requires_pool_length_and_lengths()
+    public async Task Swimming_rejects_invalid_optional_pool_values()
     {
         var viewModel = new ActivityLogViewModel(new RecordingActivityRepository(), new NoOpDatabaseInitializer());
         viewModel.SelectActivityType(ActivityType.Swimming);
         viewModel.SetDate(new DateTime(2026, 9, 9));
+        viewModel.PoolLengthText = "-25";
+        viewModel.PoolLengthsText = "not-a-number";
 
         await viewModel.SaveAsync();
 
-        Assert.Equal("Enter the pool length in metres.", viewModel.State.PoolLengthError);
-        Assert.Equal("Enter the number of lengths.", viewModel.State.PoolLengthsError);
+        Assert.Equal("Pool length must be a whole number greater than zero.", viewModel.State.PoolLengthError);
+        Assert.Equal("Lengths must be a whole number greater than zero.", viewModel.State.PoolLengthsError);
     }
 
     private sealed class NoOpDatabaseInitializer : IDatabaseInitializer

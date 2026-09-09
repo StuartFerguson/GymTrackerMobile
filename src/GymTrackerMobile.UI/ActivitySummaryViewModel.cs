@@ -39,11 +39,13 @@ public sealed class ActivitySummaryViewModel(IActivityRepository activities)
     private static string BuildDetails(ActivityRecord activity)
     {
         var details = new List<string>();
-        if (activity.DurationMinutes is int duration) details.Add($"{duration} min");
+        if (activity.DurationMinutes is int duration) details.Add(FormatDuration(duration));
         if (activity.DistanceKilometres is double distance) details.Add($"{distance.ToString("0.##", CultureInfo.InvariantCulture)} km");
         if (activity.Steps is int steps) details.Add($"{steps.ToString("N0", CultureInfo.InvariantCulture)} steps");
         if (activity.PoolLengthMetres is int poolLength) details.Add($"{poolLength} m pool");
         if (activity.PoolLengths is int lengths) details.Add($"{lengths} lengths");
         return details.Count == 0 ? "Activity logged" : string.Join(" · ", details);
     }
+
+    private static string FormatDuration(int durationMinutes) => $"{durationMinutes / 60}h {durationMinutes % 60}m";
 }

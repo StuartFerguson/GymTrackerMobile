@@ -14,7 +14,7 @@ public sealed class ActivitySummaryViewModelTests
             Id = Guid.NewGuid(),
             ActivityDateUtc = new DateTime(2026, 9, 9, 8, 30, 0, DateTimeKind.Utc),
             ActivityType = ActivityType.Running,
-            DurationMinutes = 35,
+            DurationMinutes = 65,
             DistanceKilometres = 5.2,
             Steps = 6000,
             Notes = "Steady pace"
@@ -25,7 +25,7 @@ public sealed class ActivitySummaryViewModelTests
 
         Assert.Equal(activity.Id, viewModel.State.ActivityId);
         Assert.Equal("Running", viewModel.State.ActivityType);
-        Assert.Equal("35 min · 5.2 km · 6,000 steps", viewModel.State.Details);
+        Assert.Equal("1h 5m · 5.2 km · 6,000 steps", viewModel.State.Details);
         Assert.Equal("Steady pace", viewModel.State.Notes);
     }
 

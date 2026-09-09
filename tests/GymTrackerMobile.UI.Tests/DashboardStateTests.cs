@@ -67,6 +67,7 @@ public sealed class DashboardStateTests
 
         Assert.False(state.IsEmptyState);
         Assert.Equal(2, state.RecentItems.Count);
+        Assert.Equal("Activity · 0h 30m", state.RecentItems.Single(x => x.Title == "Walking").Detail);
         Assert.Contains("1 workout", state.TrainingSummary);
         Assert.Contains("1 activity", state.TrainingSummary);
     }

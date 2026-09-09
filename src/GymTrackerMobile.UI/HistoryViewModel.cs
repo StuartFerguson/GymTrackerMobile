@@ -65,9 +65,11 @@ public sealed class HistoryViewModel(IWorkoutRepository workouts, IActivityRepos
     private static string BuildActivityDetails(ActivityRecord activity)
     {
         var details = new List<string>();
-        if (activity.DurationMinutes is int duration) details.Add($"{duration} min");
+        if (activity.DurationMinutes is int duration) details.Add(FormatDuration(duration));
         if (activity.DistanceKilometres is double distance) details.Add($"{distance.ToString("0.##", CultureInfo.InvariantCulture)} km");
         if (activity.Steps is int steps) details.Add($"{steps:N0} steps");
         return details.Count == 0 ? "Activity logged" : string.Join(" · ", details);
     }
+
+    private static string FormatDuration(int durationMinutes) => $"{durationMinutes / 60}h {durationMinutes % 60}m";
 }
