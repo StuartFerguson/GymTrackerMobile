@@ -18,6 +18,12 @@
     <Color x:Key="MidnightBlue">#190649</Color>
     <Color x:Key="OffBlack">#1f1f1f</Color>
 
+    <Color x:Key="AppInk">#102A50</Color>
+    <Color x:Key="AppMuted">#687A95</Color>
+    <Color x:Key="AppTeal">#169F9A</Color>
+    <Color x:Key="AppBackground">#F8FBFF</Color>
+    <Color x:Key="AppCardBorder">#E2EBF5</Color>
+
     <Color x:Key="Gray100">#E1E1E1</Color>
     <Color x:Key="Gray200">#C8C8C8</Color>
     <Color x:Key="Gray300">#ACACAC</Color>

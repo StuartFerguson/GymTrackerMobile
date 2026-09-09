@@ -27,6 +27,9 @@ public static class MauiProgram
         builder.Services.AddTransient<ActiveWorkoutPage>();
         builder.Services.AddTransient<LogActivityPage>();
         builder.Services.AddTransient<WeeklyPlanPage>();
+        builder.Services.AddTransient<HistoryPage>();
+        builder.Services.AddTransient<ExerciseProgressPage>();
+        builder.Services.AddTransient<BackupSettingsPage>();
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<StartWorkoutViewModel>();
         builder.Services.AddTransient<IllustrationPreferenceViewModel>();
