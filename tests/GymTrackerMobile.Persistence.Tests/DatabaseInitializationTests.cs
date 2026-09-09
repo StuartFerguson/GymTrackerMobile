@@ -61,6 +61,41 @@ public sealed class DatabaseInitializationTests
     }
 
     [Fact]
+    public async Task Initialization_seeds_template_specific_exercises_in_order_with_explicit_targets()
+    {
+        await using var context = await CreateContextAsync();
+
+        var templates = await context.WorkoutTemplates
+            .Include(x => x.Exercises.OrderBy(y => y.SortOrder))
+            .ToDictionaryAsync(x => x.Name);
+
+        var expected = new Dictionary<string, int[]>
+        {
+            ["Push"] = [10, 11, 12, 13, 14, 20, 23, 30],
+            ["Pull"] = [15, 16, 17, 18, 19, 21, 22, 24, 25, 26, 31],
+            ["Legs"] = [27, 28, 29],
+            ["Full Body"] = [10, 15, 27, 14, 22, 20]
+        };
+
+        Assert.Equal(expected.Keys.Order(), templates.Keys.Order());
+
+        foreach (var (name, exerciseIds) in expected)
+        {
+            var exercises = templates[name].Exercises.ToList();
+            Assert.Equal(exerciseIds.Length, exercises.Count);
+            Assert.Equal(exerciseIds.Select(StableId), exercises.Select(x => x.ExerciseId));
+            Assert.Equal(Enumerable.Range(0, exercises.Count), exercises.Select(x => x.SortOrder));
+            Assert.All(exercises, exercise =>
+            {
+                Assert.InRange(exercise.TargetMinimumRepetitions, 1, exercise.TargetMaximumRepetitions);
+                Assert.Equal(8, exercise.TargetMinimumRepetitions);
+                Assert.Equal(12, exercise.TargetMaximumRepetitions);
+                Assert.Equal(3, exercise.PlannedSetCount);
+            });
+        }
+    }
+
+    [Fact]
     public async Task Initialization_repairs_incomplete_fixed_catalogue_metadata()
     {
         var path = Path.Combine(Path.GetTempPath(), $"gym-tracker-{Guid.NewGuid():N}.db");
@@ -99,6 +134,26 @@ public sealed class DatabaseInitializationTests
         {
             if (File.Exists(path)) File.Delete(path);
         }
+    }
+
+    [Fact]
+    public async Task Initialization_repairs_incomplete_built_in_template_rows()
+    {
+        await using var context = await CreateContextAsync();
+
+        var push = await context.WorkoutTemplates
+            .Include(x => x.Exercises)
+            .SingleAsync(x => x.Name == "Push");
+        context.TemplateExercises.Remove(push.Exercises.OrderByDescending(x => x.SortOrder).First());
+        await context.SaveChangesAsync();
+
+        await new DatabaseInitializer(context).InitializeAsync();
+
+        var repaired = await context.WorkoutTemplates
+            .Include(x => x.Exercises.OrderBy(y => y.SortOrder))
+            .SingleAsync(x => x.Name == "Push");
+        Assert.Equal(8, repaired.Exercises.Count);
+        Assert.Equal(new[] { 10, 11, 12, 13, 14, 20, 23, 30 }.Select(StableId), repaired.Exercises.Select(x => x.ExerciseId));
     }
 
     [Fact]
@@ -147,7 +202,7 @@ public sealed class DatabaseInitializationTests
         Assert.Empty(await context.UserSettings.ToListAsync());
         Assert.Equal(22, await context.Exercises.CountAsync());
         Assert.Equal(4, await context.WorkoutTemplates.CountAsync());
-            Assert.Equal(88, await context.TemplateExercises.CountAsync());
+        Assert.Equal(28, await context.TemplateExercises.CountAsync());
         Assert.Single(await context.BackupMetadata.ToListAsync());
     }
 
@@ -161,4 +216,6 @@ public sealed class DatabaseInitializationTests
         await new DatabaseInitializer(context).InitializeAsync();
         return context;
     }
+
+    private static Guid StableId(int value) => new($"00000000-0000-0000-0000-{value:000000000000}");
 }

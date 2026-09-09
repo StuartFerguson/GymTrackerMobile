@@ -33,7 +33,13 @@ public static class SeedData
         new(31, "Pull Up", "Back and rear delts", "Bodyweight", WeightEntryConvention.BodyweightOnly, ExerciseMode.Bodyweight)
     ];
 
-    private static readonly string[] TemplateNames = ["Push", "Pull", "Legs", "Full Body"];
+    private static readonly TemplateDefinition[] Templates =
+    [
+        new("Push", [10, 11, 12, 13, 14, 20, 23, 30]),
+        new("Pull", [15, 16, 17, 18, 19, 21, 22, 24, 25, 26, 31]),
+        new("Legs", [27, 28, 29]),
+        new("Full Body", [10, 15, 27, 14, 22, 20])
+    ];
 
     public static async Task EnsureSeededAsync(GymTrackerDbContext context, CancellationToken cancellationToken)
     {
@@ -58,12 +64,12 @@ public static class SeedData
 
         if (!await context.WorkoutTemplates.AnyAsync(cancellationToken))
         {
-            for (var index = 0; index < TemplateNames.Length; index++)
+            for (var index = 0; index < Templates.Length; index++)
             {
                 context.WorkoutTemplates.Add(new WorkoutTemplate
                 {
                     Id = StableId(index + 100),
-                    Name = TemplateNames[index],
+                    Name = Templates[index].Name,
                     IsBuiltIn = true
                 });
             }
@@ -76,30 +82,56 @@ public static class SeedData
 
         await context.SaveChangesAsync(cancellationToken);
 
-        if (!await context.TemplateExercises.AnyAsync(cancellationToken))
-        {
-            var exercises = await context.Exercises.OrderBy(x => x.Name).ToListAsync(cancellationToken);
-            var templates = await context.WorkoutTemplates.OrderBy(x => x.Name).ToListAsync(cancellationToken);
-            foreach (var template in templates)
-            {
-                foreach (var (exercise, order) in exercises.Select((exercise, order) => (exercise, order)))
-                {
-                    context.TemplateExercises.Add(new TemplateExercise
-                    {
-                        WorkoutTemplateId = template.Id,
-                        ExerciseId = exercise.Id,
-                        SortOrder = order,
-                        TargetMinimumRepetitions = exercise.DefaultMinimumRepetitions,
-                        TargetMaximumRepetitions = exercise.DefaultMaximumRepetitions,
-                        PlannedSetCount = exercise.DefaultSetCount
-                    });
-                }
-            }
-
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        await EnsureTemplateExercisesAsync(context, cancellationToken);
 
         await EnsureSampleWorkoutsAsync(context, cancellationToken);
+    }
+
+    private static async Task EnsureTemplateExercisesAsync(GymTrackerDbContext context, CancellationToken cancellationToken)
+    {
+        var exercises = await context.Exercises.ToDictionaryAsync(x => x.Id, cancellationToken);
+        var templates = await context.WorkoutTemplates
+            .Where(x => x.IsBuiltIn)
+            .Include(x => x.Exercises)
+            .ToDictionaryAsync(x => x.Name, cancellationToken);
+
+        foreach (var definition in Templates)
+        {
+            var template = templates[definition.Name];
+            var expected = definition.ExerciseIds
+                .Select((catalogueId, order) => new TemplateExercise
+                {
+                    WorkoutTemplateId = template.Id,
+                    ExerciseId = StableId(catalogueId),
+                    SortOrder = order,
+                    TargetMinimumRepetitions = definition.TargetMinimumRepetitions,
+                    TargetMaximumRepetitions = definition.TargetMaximumRepetitions,
+                    PlannedSetCount = definition.PlannedSetCount
+                })
+                .ToList();
+
+            var current = template.Exercises.OrderBy(x => x.SortOrder).ToList();
+            if (current.Count == expected.Count && current.Zip(expected).All(pair =>
+                    pair.First.ExerciseId == pair.Second.ExerciseId &&
+                    pair.First.SortOrder == pair.Second.SortOrder &&
+                    pair.First.TargetMinimumRepetitions == pair.Second.TargetMinimumRepetitions &&
+                    pair.First.TargetMaximumRepetitions == pair.Second.TargetMaximumRepetitions &&
+                    pair.First.PlannedSetCount == pair.Second.PlannedSetCount))
+            {
+                continue;
+            }
+
+            context.TemplateExercises.RemoveRange(current);
+            foreach (var item in expected)
+            {
+                if (!exercises.ContainsKey(item.ExerciseId))
+                    throw new InvalidOperationException($"Template '{template.Name}' references missing catalogue exercise '{item.ExerciseId}'.");
+
+                context.TemplateExercises.Add(item);
+            }
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task EnsureSampleWorkoutsAsync(GymTrackerDbContext context, CancellationToken cancellationToken)
@@ -195,6 +227,13 @@ public static class SeedData
     {
         public Guid Id => SeedData.StableId(StableIdValue);
     }
+
+    private sealed record TemplateDefinition(
+        string Name,
+        int[] ExerciseIds,
+        int TargetMinimumRepetitions = 8,
+        int TargetMaximumRepetitions = 12,
+        int PlannedSetCount = 3);
 
     private static Guid StableId(int value) => new($"00000000-0000-0000-0000-{value:000000000000}");
 }
