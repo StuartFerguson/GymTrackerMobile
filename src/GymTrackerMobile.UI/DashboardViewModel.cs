@@ -24,6 +24,7 @@ public sealed class DashboardViewModel
         StartWorkoutCommand = new Command(async () => await StartWorkoutAsync());
         LogActivityCommand = new Command(async () => await LogActivityAsync());
         WeeklyPlanCommand = new Command(async () => await _navigate(DashboardRoutes.WeeklyPlan));
+        ProgressCommand = new Command(async () => await _navigate(NavigationRoutes.ExerciseProgress));
         HistoryCommand = new Command(async () => await _navigate(NavigationRoutes.History));
         SettingsCommand = new Command(async () => await _navigate(NavigationRoutes.BackupSettings));
     }
@@ -31,6 +32,7 @@ public sealed class DashboardViewModel
     public ICommand StartWorkoutCommand { get; }
     public ICommand LogActivityCommand { get; }
     public ICommand WeeklyPlanCommand { get; }
+    public ICommand ProgressCommand { get; }
     public ICommand HistoryCommand { get; }
     public ICommand SettingsCommand { get; }
     public DashboardState State { get; private set; } = new();

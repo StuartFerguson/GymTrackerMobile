@@ -175,7 +175,7 @@ public sealed class DashboardPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) }
         };
         grid.Add(CreateNavigationItem("dashboard_home.svg", "Home", true), 0, 0);
-        grid.Add(CreateNavigationItem("dashboard_plan.svg", "Plan", false), 1, 0);
+        grid.Add(CreateNavigationItem("dashboard_progress.svg", "Progress", false, _viewModel.ProgressCommand), 1, 0);
         grid.Add(CreateNavigationItem("dashboard_history.svg", "History", false, _viewModel.HistoryCommand), 2, 0);
         grid.Add(CreateNavigationItem("dashboard_more.svg", "More", false, _viewModel.SettingsCommand), 3, 0);
         return grid;

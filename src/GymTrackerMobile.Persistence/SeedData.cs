@@ -28,7 +28,9 @@ public static class SeedData
         new(26, "Hammer Curl", "Arms", "Dumbbell", WeightEntryConvention.PerDumbbell, ExerciseMode.Dumbbell),
         new(27, "Leg Press", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
         new(28, "Seated Leg Curl", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
-        new(29, "Leg Extension", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine)
+        new(29, "Leg Extension", "Legs", "Machine", WeightEntryConvention.TotalLoad, ExerciseMode.Machine),
+        new(30, "Push Up", "Chest and shoulders", "Bodyweight", WeightEntryConvention.BodyweightOnly, ExerciseMode.Bodyweight),
+        new(31, "Pull Up", "Back and rear delts", "Bodyweight", WeightEntryConvention.BodyweightOnly, ExerciseMode.Bodyweight)
     ];
 
     private static readonly string[] TemplateNames = ["Push", "Pull", "Legs", "Full Body"];

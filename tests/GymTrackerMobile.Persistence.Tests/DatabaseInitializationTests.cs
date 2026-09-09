@@ -22,7 +22,7 @@ public sealed class DatabaseInitializationTests
 
                 await initializer.InitializeAsync();
 
-                Assert.Equal(20, await context.Exercises.CountAsync());
+                Assert.Equal(22, await context.Exercises.CountAsync());
                 var exercises = await context.Exercises.AsNoTracking().ToListAsync();
                 var expectedNames = new[]
                 {
@@ -32,7 +32,7 @@ public sealed class DatabaseInitializationTests
                     "One-Arm Dumbbell Row", "Tricep Extension Machine", "Bicep Curl Machine",
                     "Barbell Curl", "Overhead Tricep Extension", "Incline Bicep Curl",
                     "Concentration Bicep Curl", "Hammer Curl", "Leg Press", "Seated Leg Curl",
-                    "Leg Extension"
+                    "Leg Extension", "Push Up", "Pull Up"
                 };
 
                 Assert.Equal(expectedNames.Order(), exercises.Select(x => x.Name).Order());
@@ -145,9 +145,9 @@ public sealed class DatabaseInitializationTests
         Assert.Equal(2, await context.WorkoutSessions.CountAsync());
         Assert.Empty(await context.ActivityRecords.ToListAsync());
         Assert.Empty(await context.UserSettings.ToListAsync());
-        Assert.Equal(20, await context.Exercises.CountAsync());
+        Assert.Equal(22, await context.Exercises.CountAsync());
         Assert.Equal(4, await context.WorkoutTemplates.CountAsync());
-        Assert.Equal(80, await context.TemplateExercises.CountAsync());
+            Assert.Equal(88, await context.TemplateExercises.CountAsync());
         Assert.Single(await context.BackupMetadata.ToListAsync());
     }
 
