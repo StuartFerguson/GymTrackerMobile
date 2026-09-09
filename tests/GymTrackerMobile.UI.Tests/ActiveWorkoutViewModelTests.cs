@@ -51,6 +51,40 @@ public sealed class ActiveWorkoutViewModelTests
     }
 
     [Fact]
+    public async Task Different_sets_keep_their_own_values_and_recorded_timestamp()
+    {
+        var session = CreateSession();
+        var repository = new RecordingWorkoutRepository(session);
+        var viewModel = CreateViewModel(session, repository);
+        await viewModel.LoadAsync(session.Id);
+
+        await viewModel.UpdateSetAsync(1, 40, 12, "Warm-up");
+        await viewModel.SaveSetAsync(1);
+        await viewModel.UpdateSetAsync(2, 45, 8, "Hard set");
+        await viewModel.SaveSetAsync(2);
+
+        Assert.Equal((40, 12, "Warm-up"), (repository.SavedSets[0].WeightKilograms, repository.SavedSets[0].Repetitions, repository.SavedSets[0].Notes));
+        Assert.Equal((45, 8, "Hard set"), (repository.SavedSets[1].WeightKilograms, repository.SavedSets[1].Repetitions, repository.SavedSets[1].Notes));
+        Assert.NotNull(repository.SavedSets[0].RecordedAtUtc);
+        Assert.NotNull(repository.SavedSets[1].RecordedAtUtc);
+    }
+
+    [Fact]
+    public async Task Non_completed_statuses_can_be_saved_without_repetitions()
+    {
+        var session = CreateSession();
+        var repository = new RecordingWorkoutRepository(session);
+        var viewModel = CreateViewModel(session, repository);
+        await viewModel.LoadAsync(session.Id);
+
+        await viewModel.SetStatusAsync(1, SetStatus.Failed);
+        await viewModel.SetStatusAsync(2, SetStatus.Skipped);
+        await viewModel.SetStatusAsync(3, SetStatus.Incomplete);
+
+        Assert.Equal([SetStatus.Failed, SetStatus.Skipped, SetStatus.Incomplete], repository.SavedSets.Select(x => x.Status));
+    }
+
+    [Fact]
     public async Task Invalid_set_values_are_rejected_without_losing_draft()
     {
         var session = CreateSession();
@@ -152,13 +186,14 @@ public sealed class ActiveWorkoutViewModelTests
     private sealed class RecordingWorkoutRepository(WorkoutSession session) : IWorkoutRepository
     {
         public WorkoutSet? SavedSet { get; private set; }
+        public List<WorkoutSet> SavedSets { get; } = [];
         public Guid? CompletedSessionId { get; private set; }
         public string? CompletedNotes { get; private set; }
         public Guid? AbandonedSessionId { get; private set; }
         public Task<IReadOnlyList<WorkoutTemplate>> GetTemplatesAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<WorkoutTemplate>>([]);
         public Task<IReadOnlyList<WorkoutSession>> GetCompletedWorkoutsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<WorkoutSession>>([]);
         public Task<WorkoutSession> StartWorkoutAsync(Guid templateId, DateTime startedAtUtc, CancellationToken cancellationToken = default) => Task.FromResult(session);
-        public Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default) { SavedSet = set; return Task.CompletedTask; }
+        public Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default) { SavedSet = set; SavedSets.Add(set); return Task.CompletedTask; }
         public Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default) => Task.FromResult<WorkoutSession?>(session);
         public Task CompleteWorkoutAsync(Guid sessionId, DateTime completedAtUtc, string? notes, CancellationToken cancellationToken = default) { CompletedSessionId = sessionId; CompletedNotes = notes; return Task.CompletedTask; }
         public Task AbandonWorkoutAsync(Guid sessionId, CancellationToken cancellationToken = default) { AbandonedSessionId = sessionId; return Task.CompletedTask; }

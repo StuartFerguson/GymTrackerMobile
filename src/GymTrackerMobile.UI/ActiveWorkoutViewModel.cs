@@ -10,7 +10,8 @@ public sealed record ActiveWorkoutSet(
     int? Repetitions,
     SetStatus Status,
     string? Notes,
-    string? Difficulty);
+    string? Difficulty,
+    DateTime? RecordedAtUtc);
 
 public sealed record ActiveWorkoutExercise(
     Guid Id,
@@ -77,22 +78,31 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
         return Task.CompletedTask;
     }
 
-    public async Task SaveSetAsync(int setNumber, CancellationToken cancellationToken = default)
+    public Task SaveSetAsync(int setNumber, CancellationToken cancellationToken = default) =>
+        SetStatusAsync(setNumber, SetStatus.Completed, cancellationToken);
+
+    public async Task SetStatusAsync(int setNumber, SetStatus status, CancellationToken cancellationToken = default)
     {
         if (State.CurrentExercise is not { } exercise) return;
         var set = exercise.Sets.FirstOrDefault(x => x.SetNumber == setNumber);
         if (set is null) return;
+        if (status == SetStatus.Planned)
+        {
+            State = State with { ErrorMessage = "A set must be logged as completed, failed, skipped, or incomplete." };
+            return;
+        }
         if (set.WeightKilograms is < 0)
         {
             State = State with { ErrorMessage = "Weight must be zero or greater." };
             return;
         }
-        if (set.Repetitions is not > 0)
+        if (status == SetStatus.Completed && set.Repetitions is not > 0)
         {
             State = State with { ErrorMessage = "Repetitions must be greater than zero." };
             return;
         }
 
+        var recordedAtUtc = DateTime.UtcNow;
         await workouts.SaveSetAsync(new WorkoutSet
         {
             Id = set.Id,
@@ -101,10 +111,10 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
             WeightKilograms = exercise.ShowsWeight ? set.WeightKilograms : null,
             Repetitions = set.Repetitions,
             Notes = set.Notes,
-            Status = SetStatus.Completed,
-            RecordedAtUtc = DateTime.UtcNow
+            Status = status,
+            RecordedAtUtc = recordedAtUtc
         }, cancellationToken);
-        ReplaceCurrentExercise(exercise with { Sets = exercise.Sets.Select(x => x.SetNumber == setNumber ? x with { Status = SetStatus.Completed } : x).ToList() });
+        ReplaceCurrentExercise(exercise with { Sets = exercise.Sets.Select(x => x.SetNumber == setNumber ? x with { Status = status, RecordedAtUtc = recordedAtUtc } : x).ToList() });
         State = State with { ErrorMessage = null };
     }
 
@@ -162,7 +172,7 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
         exercise.TargetMaximumRepetitions,
         ExerciseImageResolver.Resolve(exercise.ExerciseName),
         exercise.WeightEntryConvention,
-        exercise.Sets.OrderBy(x => x.SetNumber).Select(x => new ActiveWorkoutSet(x.Id, x.SetNumber, x.WeightKilograms, x.Repetitions, x.Status, x.Notes, x.Difficulty)).ToList());
+        exercise.Sets.OrderBy(x => x.SetNumber).Select(x => new ActiveWorkoutSet(x.Id, x.SetNumber, x.WeightKilograms, x.Repetitions, x.Status, x.Notes, x.Difficulty, x.RecordedAtUtc)).ToList());
 
     private static string ModeLabel(string equipmentType) => equipmentType.Equals("Bodyweight", StringComparison.OrdinalIgnoreCase) ? "Bodyweight" : "Strength";
 

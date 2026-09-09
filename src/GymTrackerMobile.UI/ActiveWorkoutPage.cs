@@ -87,16 +87,27 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
 
     private View BuildSetRow(ActiveWorkoutExercise exercise, ActiveWorkoutSet set)
     {
-        var weight = new Entry { Text = set.WeightKilograms?.ToString("0.##"), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
+        var weightLabel = exercise.WeightEntryConvention == WeightEntryConvention.PerDumbbell ? "kg / dumbbell" : "kg";
+        var weight = new Entry { Text = set.WeightKilograms?.ToString("0.##"), Placeholder = weightLabel, Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
         var reps = new Entry { Text = set.Repetitions?.ToString(), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
         var notes = new Entry { Text = set.Notes, Placeholder = "Notes (optional)", FontSize = 15, TextColor = Muted, BackgroundColor = Colors.White };
         var save = new Button { Text = set.Status == SetStatus.Completed ? "✓  Complete" : "Mark complete", FontSize = 14, BackgroundColor = set.Status == SetStatus.Completed ? Teal : Colors.White, TextColor = set.Status == SetStatus.Completed ? Colors.White : Ink, BorderColor = Color.FromArgb("#D5E0EC"), BorderWidth = 1, CornerRadius = 16, Padding = 4 };
         save.Clicked += async (_, _) => { await _viewModel.UpdateSetAsync(set.SetNumber, exercise.ShowsWeight && double.TryParse(weight.Text, out var parsedWeight) ? parsedWeight : null, int.TryParse(exercise.ShowsWeight ? reps.Text : weight.Text, out var parsedReps) ? parsedReps : null, notes.Text); await _viewModel.SaveSetAsync(set.SetNumber); Render(); };
+        var status = new Picker { Title = "Set status", FontSize = 14, TextColor = Ink, BackgroundColor = Colors.White, ItemsSource = Enum.GetValues<SetStatus>().Where(x => x != SetStatus.Planned).Select(x => x.ToString()).ToList(), SelectedItem = set.Status == SetStatus.Planned ? SetStatus.Incomplete.ToString() : set.Status.ToString() };
+        status.SelectedIndexChanged += async (_, _) =>
+        {
+            if (Enum.TryParse<SetStatus>(status.SelectedItem?.ToString(), out var selectedStatus) && selectedStatus != set.Status)
+            {
+                await _viewModel.UpdateSetAsync(set.SetNumber, exercise.ShowsWeight && double.TryParse(weight.Text, out var parsedWeight) ? parsedWeight : null, int.TryParse(exercise.ShowsWeight ? reps.Text : weight.Text, out var parsedReps) ? parsedReps : null, notes.Text);
+                await _viewModel.SetStatusAsync(set.SetNumber, selectedStatus);
+                Render();
+            }
+        };
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(34), new(GridLength.Star), new(GridLength.Star), new(118) }, ColumnSpacing = 8 };
         grid.Add(new Label { Text = set.SetNumber.ToString(), FontSize = 20, FontAttributes = FontAttributes.Bold, TextColor = Ink, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
         if (exercise.ShowsWeight) { grid.Add(EntryCard(weight), 1, 0); grid.Add(EntryCard(reps), 2, 0); grid.Add(save, 3, 0); }
         else { grid.Add(EntryCard(reps), 1, 0); grid.Add(save, 2, 0); Grid.SetColumnSpan(save, 2); }
-        return new VerticalStackLayout { Spacing = 2, Children = { grid, notes } };
+        return new VerticalStackLayout { Spacing = 2, Children = { grid, new HorizontalStackLayout { Spacing = 8, Children = { new Label { Text = "Status", FontSize = 14, TextColor = Muted, VerticalTextAlignment = TextAlignment.Center }, status, notes } } } };
     }
 
     private static View EntryCard(Entry entry) => new Border { Stroke = Color.FromArgb("#D5E0EC"), StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 14 }, Padding = 0, Content = entry };

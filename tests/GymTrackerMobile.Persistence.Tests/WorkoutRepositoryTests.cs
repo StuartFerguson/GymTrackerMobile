@@ -158,6 +158,49 @@ public sealed class WorkoutRepositoryTests
     }
 
     [Fact]
+    public async Task All_loggable_set_statuses_round_trip_through_persistence()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"gym-tracker-{Guid.NewGuid():N}.db");
+        try
+        {
+            Guid exerciseId;
+            await using (var context = await CreateContextAsync(path))
+            {
+                var repository = new WorkoutRepository(context);
+                var template = await context.WorkoutTemplates.FirstAsync();
+                var session = await repository.StartWorkoutAsync(template.Id, DateTime.UtcNow);
+                var exercise = session.Exercises.First();
+                exerciseId = exercise.Id;
+
+                for (var index = 0; index < 4; index++)
+                {
+                    var setNumber = index + 1;
+                    var existingSet = exercise.Sets.SingleOrDefault(x => x.SetNumber == setNumber);
+                    await repository.SaveSetAsync(new WorkoutSet
+                    {
+                        Id = existingSet?.Id ?? Guid.NewGuid(),
+                        WorkoutExerciseId = exerciseId,
+                        SetNumber = setNumber,
+                        Status = (SetStatus)(index + 1),
+                        Repetitions = index == 0 ? 10 : null,
+                        RecordedAtUtc = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await using var reopened = await CreateContextAsync(path);
+            var recovered = await new WorkoutRepository(reopened).GetActiveWorkoutAsync();
+            var statuses = recovered!.Exercises.Single(x => x.Id == exerciseId).Sets.OrderBy(x => x.SetNumber).Select(x => x.Status);
+
+            Assert.Equal([SetStatus.Completed, SetStatus.Incomplete, SetStatus.Failed, SetStatus.Skipped], statuses);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
     public async Task Abandoning_active_workout_removes_only_the_active_session()
     {
         await using var context = await CreateContextAsync();
