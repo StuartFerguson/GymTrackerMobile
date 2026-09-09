@@ -8,6 +8,8 @@ public sealed class ActivityRecord
     public int? DurationMinutes { get; set; }
     public double? DistanceKilometres { get; set; }
     public int? Steps { get; set; }
+    public int? PoolLengthMetres { get; set; }
+    public int? PoolLengths { get; set; }
     public string? Notes { get; set; }
     public double? AveragePaceMinutesPerKilometre { get; set; }
 }

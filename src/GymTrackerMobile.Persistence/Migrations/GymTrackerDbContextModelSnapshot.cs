@@ -40,6 +40,12 @@ namespace GymTrackerMobile.Persistence.Migrations
                     b.Property<int?>("DurationMinutes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PoolLengthMetres")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PoolLengths")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
