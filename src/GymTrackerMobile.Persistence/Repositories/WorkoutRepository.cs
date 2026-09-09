@@ -108,9 +108,20 @@ public sealed class WorkoutRepository(GymTrackerDbContext context) : IWorkoutRep
     {
         var session = await context.WorkoutSessions.SingleOrDefaultAsync(x => x.Id == sessionId, cancellationToken)
             ?? throw new KeyNotFoundException($"Workout session '{sessionId}' was not found.");
+        if (!session.IsActive) throw new InvalidOperationException("Only an active workout can be completed.");
         session.CompletedAtUtc = completedAtUtc;
         session.Notes = notes;
         session.IsActive = false;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AbandonWorkoutAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var session = await context.WorkoutSessions.SingleOrDefaultAsync(x => x.Id == sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Workout session '{sessionId}' was not found.");
+        if (!session.IsActive) throw new InvalidOperationException("Completed workouts cannot be abandoned.");
+
+        context.WorkoutSessions.Remove(session);
         await context.SaveChangesAsync(cancellationToken);
     }
 }

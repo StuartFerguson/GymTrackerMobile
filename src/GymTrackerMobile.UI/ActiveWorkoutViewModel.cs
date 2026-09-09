@@ -36,7 +36,8 @@ public sealed record ActiveWorkoutState(
     IReadOnlyList<ActiveWorkoutExercise>? Exercises = null,
     int CurrentExerciseIndex = 0,
     ActiveWorkoutRecommendation? Recommendation = null,
-    string? ErrorMessage = null)
+    string? ErrorMessage = null,
+    bool IsActive = true)
 {
     public IReadOnlyList<ActiveWorkoutExercise> ExerciseList => Exercises ?? [];
     public ActiveWorkoutExercise? CurrentExercise => ExerciseList.Count == 0 || CurrentExerciseIndex >= ExerciseList.Count ? null : ExerciseList[CurrentExerciseIndex];
@@ -59,7 +60,7 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
         }
 
         var exercises = _session.Exercises.OrderBy(x => x.SortOrder).Select(BuildExercise).ToList();
-        State = new(_session.Id, _session.TemplateName, exercises, 0, BuildRecommendation(exercises[0]), null);
+        State = new(_session.Id, _session.TemplateName, exercises, 0, exercises.Count == 0 ? null : BuildRecommendation(exercises[0]), null, true);
     }
 
     public Task UpdateSetAsync(int setNumber, double? weightKilograms, int? repetitions, string? notes = null)
@@ -102,6 +103,20 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
         }, cancellationToken);
         ReplaceCurrentExercise(exercise with { Sets = exercise.Sets.Select(x => x.SetNumber == setNumber ? x with { Status = SetStatus.Completed } : x).ToList() });
         State = State with { ErrorMessage = null };
+    }
+
+    public async Task CompleteAsync(string? notes = null, CancellationToken cancellationToken = default)
+    {
+        if (State.SessionId is not Guid sessionId || !State.IsActive) return;
+        await workouts.CompleteWorkoutAsync(sessionId, DateTime.UtcNow, notes, cancellationToken);
+        State = State with { IsActive = false, ErrorMessage = null };
+    }
+
+    public async Task AbandonAsync(CancellationToken cancellationToken = default)
+    {
+        if (State.SessionId is not Guid sessionId || !State.IsActive) return;
+        await workouts.AbandonWorkoutAsync(sessionId, cancellationToken);
+        State = State with { IsActive = false, ErrorMessage = null };
     }
 
     public Task SelectExerciseAsync(int index)
