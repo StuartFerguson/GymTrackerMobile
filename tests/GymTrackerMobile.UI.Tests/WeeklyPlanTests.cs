@@ -27,22 +27,31 @@ public sealed class WeeklyPlanTests
             ]).Days;
 
         Assert.Equal(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], days.Select(x => x.DayName));
-        Assert.Equal(["Push", "Pull", "Legs", "Full Body", "Walk", "Swim", "Rest"], days.Select(x => x.Title));
-        Assert.Equal([WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Activity, WeeklyPlanDayKind.Activity, WeeklyPlanDayKind.Rest], days.Select(x => x.Kind));
+        Assert.Equal(["Push", "Walk", "Pull", "Swim", "Legs", "Full Body", "Rest"], days.Select(x => x.Title));
+        Assert.Equal([WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Activity, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Activity, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Gym, WeeklyPlanDayKind.Rest], days.Select(x => x.Kind));
         Assert.Equal(pushId, days[0].TemplateId);
-        Assert.Equal(fullBodyId, days[3].TemplateId);
+        Assert.Equal(fullBodyId, days[5].TemplateId);
     }
 
     [Fact]
     public void Actions_are_enabled_for_matching_gym_and_activity_days_only()
     {
-        var state = WeeklyPlanStateBuilder.Build([new WeeklyPlanTemplateSummary(Guid.NewGuid(), "Push")]);
+        var state = WeeklyPlanStateBuilder.Build(
+        [
+            new WeeklyPlanTemplateSummary(Guid.NewGuid(), "Push"),
+            new WeeklyPlanTemplateSummary(Guid.NewGuid(), "Pull"),
+            new WeeklyPlanTemplateSummary(Guid.NewGuid(), "Legs"),
+            new WeeklyPlanTemplateSummary(Guid.NewGuid(), "Full Body")
+        ]);
 
         Assert.True(state.Days[0].CanStartWorkout);
         Assert.False(state.Days[0].CanLogActivity);
+        Assert.True(state.Days[1].CanLogActivity);
         Assert.False(state.Days[1].CanStartWorkout);
-        Assert.True(state.Days[4].CanLogActivity);
-        Assert.False(state.Days[4].CanStartWorkout);
+        Assert.True(state.Days[2].CanStartWorkout);
+        Assert.True(state.Days[3].CanLogActivity);
+        Assert.True(state.Days[4].CanStartWorkout);
+        Assert.True(state.Days[5].CanStartWorkout);
         Assert.False(state.Days[6].CanStartWorkout);
         Assert.False(state.Days[6].CanLogActivity);
     }
@@ -53,8 +62,8 @@ public sealed class WeeklyPlanTests
         var days = WeeklyPlanStateBuilder.Build([]).Days;
 
         Assert.Equal(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], days.Select(x => x.ShortDayName));
-        Assert.Equal(["neutral_workout_push.png", "neutral_workout_pull.png", "neutral_workout_legs.png", "neutral_workout_full_body.png", "neutral_activity_walk.png", "neutral_activity_swim.png", "neutral_activity_rest.png"], days.Select(x => x.IconSource));
-        Assert.Equal(["Start workout", "Start workout", "Start workout", "Start workout", "Log activity", "Log activity", "Rest"], days.Select(x => x.ActionLabel));
+        Assert.Equal(["neutral_workout_push.png", "neutral_activity_walk.png", "neutral_workout_pull.png", "neutral_activity_swim.png", "neutral_workout_legs.png", "neutral_workout_full_body.png", "neutral_activity_rest.png"], days.Select(x => x.IconSource));
+        Assert.Equal(["Start workout", "Log activity", "Start workout", "Log activity", "Start workout", "Start workout", "Rest"], days.Select(x => x.ActionLabel));
     }
 
     [Fact]
@@ -63,7 +72,7 @@ public sealed class WeeklyPlanTests
         var days = WeeklyPlanStateBuilder.Build([], IllustrationStyle.Male).Days;
 
         Assert.Equal("male_workout_push.png", days[0].IconSource);
-        Assert.Equal("male_activity_walk.png", days[4].IconSource);
+        Assert.Equal("male_activity_walk.png", days[1].IconSource);
         Assert.Equal("male_activity_rest.png", days[6].IconSource);
     }
 
@@ -81,7 +90,7 @@ public sealed class WeeklyPlanTests
             });
 
         await viewModel.StartWorkoutAsync(viewModel.State.Days[0]);
-        await viewModel.LogActivityAsync(viewModel.State.Days[4]);
+        await viewModel.LogActivityAsync(viewModel.State.Days[1]);
 
         Assert.Equal(
             [WeeklyPlanRoutes.StartWorkout(templateId), WeeklyPlanRoutes.LogActivity],
