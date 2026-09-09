@@ -102,6 +102,26 @@ public sealed class DatabaseInitializationTests
     }
 
     [Fact]
+    public async Task Initialization_seeds_complete_and_partial_workout_examples_once()
+    {
+        await using var context = await CreateContextAsync();
+
+        var sessions = await context.WorkoutSessions
+            .Include(x => x.Exercises)
+            .ThenInclude(x => x.Sets)
+            .OrderBy(x => x.TemplateName)
+            .ToListAsync();
+
+        Assert.Equal(2, sessions.Count);
+        Assert.Contains(sessions, x => x.TemplateName == "Push Workout" && x.Exercises.SelectMany(y => y.Sets).All(y => y.Status == SetStatus.Completed));
+        Assert.Contains(sessions, x => x.TemplateName == "Pull Workout" && x.Exercises.SelectMany(y => y.Sets).Any(y => y.Status == SetStatus.Incomplete));
+
+        await new DatabaseInitializer(context).InitializeAsync();
+
+        Assert.Equal(2, await context.WorkoutSessions.CountAsync());
+    }
+
+    [Fact]
     public async Task Reset_clears_user_data_and_reseeds_built_in_catalogue()
     {
         await using var context = await CreateContextAsync();
@@ -122,7 +142,7 @@ public sealed class DatabaseInitializationTests
 
         await service.ResetAsync();
 
-        Assert.Empty(await context.WorkoutSessions.ToListAsync());
+        Assert.Equal(2, await context.WorkoutSessions.CountAsync());
         Assert.Empty(await context.ActivityRecords.ToListAsync());
         Assert.Empty(await context.UserSettings.ToListAsync());
         Assert.Equal(20, await context.Exercises.CountAsync());
