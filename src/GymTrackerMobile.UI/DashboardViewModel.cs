@@ -24,11 +24,13 @@ public sealed class DashboardViewModel
         StartWorkoutCommand = new Command(async () => await StartWorkoutAsync());
         LogActivityCommand = new Command(async () => await LogActivityAsync());
         WeeklyPlanCommand = new Command(async () => await _navigate(DashboardRoutes.WeeklyPlan));
+        SettingsCommand = new Command(async () => await _navigate(NavigationRoutes.BackupSettings));
     }
 
     public ICommand StartWorkoutCommand { get; }
     public ICommand LogActivityCommand { get; }
     public ICommand WeeklyPlanCommand { get; }
+    public ICommand SettingsCommand { get; }
     public DashboardState State { get; private set; } = new();
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
