@@ -96,6 +96,88 @@ public static class SeedData
 
             await context.SaveChangesAsync(cancellationToken);
         }
+
+        await EnsureSampleWorkoutsAsync(context, cancellationToken);
+    }
+
+    private static async Task EnsureSampleWorkoutsAsync(GymTrackerDbContext context, CancellationToken cancellationToken)
+    {
+        var sampleIds = new[] { StableId(501), StableId(502) };
+        var existingIds = await context.WorkoutSessions
+            .Where(x => sampleIds.Contains(x.Id))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (!existingIds.Contains(sampleIds[0]))
+            context.WorkoutSessions.Add(CreateSampleWorkout(sampleIds[0], "Push Workout", DateTime.UtcNow.AddDays(-1), "Felt strong today. Good energy and form.",
+                (10, "Chest Press Machine", "Chest", 4, 60d, 8, 4),
+                (13, "Incline Dumbbell Press", "Chest", 4, 24d, 10, 4),
+                (14, "Dumbbell Shoulder Press", "Shoulders", 4, 35d, 8, 4),
+                (20, "Tricep Extension Machine", "Triceps", 3, 20d, 12, 3)));
+
+        if (!existingIds.Contains(sampleIds[1]))
+            context.WorkoutSessions.Add(CreateSampleWorkout(sampleIds[1], "Pull Workout", DateTime.UtcNow.AddDays(-3), null,
+                (15, "Lat Pulldown Machine", "Back", 3, 55d, 10, 3),
+                (17, "Seated Cable Row", "Back", 3, 50d, 10, 2),
+                (22, "Barbell Curl", "Biceps", 3, 30d, 10, 1)));
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static WorkoutSession CreateSampleWorkout(
+        Guid id,
+        string name,
+        DateTime completedAtUtc,
+        string? notes,
+        params (int exerciseId, string name, string muscle, int plannedSets, double weight, int repetitions, int completedSets)[] exercises)
+    {
+        var session = new WorkoutSession
+        {
+            Id = id,
+            TemplateId = StableId(name.StartsWith("Push", StringComparison.Ordinal) ? 100 : 101),
+            TemplateName = name,
+            StartedAtUtc = completedAtUtc.AddMinutes(-62),
+            CompletedAtUtc = completedAtUtc,
+            IsActive = false,
+            Notes = notes
+        };
+
+        foreach (var item in exercises.Select((item, index) => (item, index)))
+        {
+            var workoutExercise = new WorkoutExercise
+            {
+                Id = StableId(id == StableId(501) ? 510 + item.index : 520 + item.index),
+                WorkoutSessionId = id,
+                ExerciseId = StableId(item.item.exerciseId),
+                ExerciseName = item.item.name,
+                PrimaryMuscleGroup = item.item.muscle,
+                EquipmentType = "Strength",
+                WeightEntryConvention = item.item.name.Contains("Dumbbell", StringComparison.Ordinal) ? WeightEntryConvention.PerDumbbell : WeightEntryConvention.TotalLoad,
+                TargetMinimumRepetitions = item.item.repetitions,
+                TargetMaximumRepetitions = item.item.repetitions,
+                PlannedSetCount = item.item.plannedSets,
+                SortOrder = item.index
+            };
+
+            for (var setNumber = 1; setNumber <= item.item.plannedSets; setNumber++)
+            {
+                var completed = setNumber <= item.item.completedSets;
+                workoutExercise.Sets.Add(new WorkoutSet
+                {
+                    Id = StableId((id == StableId(501) ? 530 : 600) + item.index * 10 + setNumber),
+                    WorkoutExerciseId = workoutExercise.Id,
+                    SetNumber = setNumber,
+                    Status = completed ? SetStatus.Completed : SetStatus.Incomplete,
+                    WeightKilograms = completed ? item.item.weight : null,
+                    Repetitions = completed ? item.item.repetitions : null,
+                    RecordedAtUtc = completed ? completedAtUtc : null
+                });
+            }
+
+            session.Exercises.Add(workoutExercise);
+        }
+
+        return session;
     }
 
     private sealed record CatalogueExercise(

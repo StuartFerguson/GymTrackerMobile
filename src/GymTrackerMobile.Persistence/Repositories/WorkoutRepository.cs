@@ -13,6 +13,8 @@ public sealed class WorkoutRepository(GymTrackerDbContext context) : IWorkoutRep
         DateTime toUtc,
         CancellationToken cancellationToken = default) =>
         await context.WorkoutSessions.AsNoTracking()
+            .Include(x => x.Exercises.OrderBy(y => y.SortOrder))
+            .ThenInclude(x => x.Sets.OrderBy(y => y.SetNumber))
             .Where(x => !x.IsActive && x.CompletedAtUtc != null && x.CompletedAtUtc >= fromUtc && x.CompletedAtUtc < toUtc)
             .OrderByDescending(x => x.CompletedAtUtc)
             .ToListAsync(cancellationToken);

@@ -121,7 +121,7 @@ public sealed class DashboardPage : ContentPage
         };
         grid.Add(CreateActionTile("dashboard_add.svg", "Log activity", _viewModel.LogActivityCommand), 0, 0);
         grid.Add(CreateActionTile("dashboard_plan.svg", "Plan", _viewModel.WeeklyPlanCommand), 1, 0);
-        grid.Add(CreateActionTile("dashboard_history.svg", "History"), 2, 0);
+        grid.Add(CreateActionTile("dashboard_history.svg", "History", _viewModel.HistoryCommand), 2, 0);
         grid.Add(CreateActionTile("dashboard_more.svg", "More", _viewModel.SettingsCommand), 3, 0);
         return grid;
     }
@@ -176,7 +176,7 @@ public sealed class DashboardPage : ContentPage
         };
         grid.Add(CreateNavigationItem("dashboard_home.svg", "Home", true), 0, 0);
         grid.Add(CreateNavigationItem("dashboard_plan.svg", "Plan", false), 1, 0);
-        grid.Add(CreateNavigationItem("dashboard_history.svg", "History", false), 2, 0);
+        grid.Add(CreateNavigationItem("dashboard_history.svg", "History", false, _viewModel.HistoryCommand), 2, 0);
         grid.Add(CreateNavigationItem("dashboard_more.svg", "More", false, _viewModel.SettingsCommand), 3, 0);
         return grid;
     }
