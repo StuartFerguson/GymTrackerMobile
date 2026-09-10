@@ -1,7 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
-using Microsoft.Maui.Storage;
-using GymTrackerMobile.Persistence;
+using GymTrackerMobile.Persistence.Backup;
 
 namespace GymTrackerMobile.UI;
 
@@ -195,83 +194,99 @@ public sealed class HistoryPage : ContentPage
     }
 }
 
-public sealed class BackupSettingsPage : ContentPage
+public sealed class BackupSettingsPage : DestinationPage
 {
-    private readonly BackupSettingsViewModel _viewModel;
-    private readonly DeveloperResetViewModel _resetViewModel;
+    private readonly DeveloperResetViewModel _viewModel;
+    private readonly BackupSettingsViewModel _backupViewModel;
 
-    public BackupSettingsPage(BackupSettingsViewModel viewModel, DeveloperResetViewModel resetViewModel)
+    public BackupSettingsPage(DeveloperResetViewModel viewModel, BackupSettingsViewModel backupViewModel) : base(DestinationPageContent.BackupSettings)
     {
         _viewModel = viewModel;
-        _resetViewModel = resetViewModel;
-        Title = "Backup & Settings";
-        BackgroundColor = Color.FromArgb("#F8FBFF");
-        var status = new Label { TextColor = Color.FromArgb("#169F9A"), IsVisible = false };
-        var error = new Label { TextColor = Color.FromArgb("#B42318"), IsVisible = false };
-        var export = new Button { Text = "Export backup", BackgroundColor = Color.FromArgb("#169F9A"), TextColor = Colors.White, CornerRadius = 8 };
-        var import = new Button { Text = "Replace with backup", BackgroundColor = Color.FromArgb("#102A50"), TextColor = Colors.White, CornerRadius = 8 };
-        var merge = new Button { Text = "Merge backup", BackgroundColor = Colors.White, TextColor = Color.FromArgb("#102A50"), BorderColor = Color.FromArgb("#102A50"), BorderWidth = 1, CornerRadius = 8 };
-        export.Clicked += async (_, _) =>
-        {
-            export.IsEnabled = false;
-            if (await _viewModel.ExportAsync() && _viewModel.LastExportPath is not null)
-                await Microsoft.Maui.ApplicationModel.DataTransfer.Share.Default.RequestAsync(new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFileRequest("Gym Tracker backup", new Microsoft.Maui.ApplicationModel.DataTransfer.ShareFile(_viewModel.LastExportPath)));
-            ShowMessages(status, error); export.IsEnabled = true;
-        };
-        import.Clicked += async (_, _) => await ImportAsync(status, error, BackupImportMode.Replace);
-        merge.Clicked += async (_, _) => await ImportAsync(status, error, BackupImportMode.Merge);
-        var content = new VerticalStackLayout { Spacing = 14, Padding = new Thickness(20, 22, 20, 28), Children =
-        {
-            new Label { Text = "Backup & Settings", FontSize = 34, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#102A50") },
-            new Label { Text = "Export a copy of your data or restore it on this device.", FontSize = 17, TextColor = Color.FromArgb("#687A95") },
-            status, error, Section("Backup", export, import, merge),
-            Section("Preferences", new Label { Text = "Units", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#102A50") }, new Label { Text = _viewModel.UnitLabel, TextColor = Color.FromArgb("#687A95") }),
-            new Label { Text = "Recommendations are general training guidance only and are not medical advice. Stop if you experience pain and consult a qualified professional when appropriate.", FontSize = 13, TextColor = Color.FromArgb("#687A95") }
-        }};
+        _backupViewModel = backupViewModel;
+        AddBackupTools();
 #if DEBUG
-        content.Children.Add(BuildDeveloperTools());
+        AddDeveloperTools();
 #endif
-        Content = new ScrollView { Content = content };
     }
 
-    protected override async void OnAppearing() { base.OnAppearing(); await _viewModel.LoadAsync(); }
-
-    private async Task ImportAsync(Label status, Label error, BackupImportMode mode)
+    private void AddBackupTools()
     {
-        var file = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Choose a Gym Tracker backup" });
-        if (file is null) return;
-        await using var stream = await file.OpenReadAsync();
-        await _viewModel.ImportAsync(stream, message => DisplayAlertAsync(mode == BackupImportMode.Replace ? "Replace existing data?" : "Merge backup data?", message, mode == BackupImportMode.Replace ? "Replace data" : "Merge data", "Cancel"), mode);
-        ShowMessages(status, error);
+        var exportButton = new Button { Text = "Export backup", BackgroundColor = Color.FromArgb("#169F9A"), TextColor = Colors.White, CornerRadius = 8 };
+        exportButton.Clicked += async (_, _) =>
+        {
+            exportButton.IsEnabled = false;
+            await _backupViewModel.ExportAsync();
+            exportButton.IsEnabled = true;
+            if (_backupViewModel.StatusMessage is not null) await DisplayAlertAsync("Backup exported", _backupViewModel.StatusMessage, "OK");
+            else if (_backupViewModel.ErrorMessage is not null) await DisplayAlertAsync("Export failed", _backupViewModel.ErrorMessage, "OK");
+        };
+
+        var replaceButton = new Button { Text = "Restore backup", BackgroundColor = Color.FromArgb("#169F9A"), TextColor = Colors.White, CornerRadius = 8 };
+        replaceButton.Clicked += async (_, _) => await ImportAsync(replaceButton, BackupImportMode.Replace);
+        var mergeButton = new Button { Text = "Merge backup", BackgroundColor = Colors.White, TextColor = Color.FromArgb("#169F9A"), BorderColor = Color.FromArgb("#169F9A"), BorderWidth = 1, CornerRadius = 8 };
+        mergeButton.Clicked += async (_, _) => await ImportAsync(mergeButton, BackupImportMode.Merge);
+
+        AddAdditionalContent(new VerticalStackLayout
+        {
+            Spacing = 8,
+            Children =
+            {
+                new Label { Text = "Backup", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#169F9A") },
+                new Label { Text = "Export your local data or restore it from a validated JSON backup.", TextColor = Color.FromArgb("#687A95") },
+                exportButton, replaceButton, mergeButton
+            }
+        });
     }
 
-    private void ShowMessages(Label status, Label error)
+    private async Task ImportAsync(Button button, BackupImportMode mode)
     {
-        status.Text = _viewModel.StatusMessage; status.IsVisible = status.Text is not null;
-        error.Text = _viewModel.ErrorMessage; error.IsVisible = error.Text is not null;
+        button.IsEnabled = false;
+        await _backupViewModel.ImportAsync(mode, () => DisplayAlertAsync(
+            mode == BackupImportMode.Replace ? "Restore backup?" : "Merge backup?",
+            mode == BackupImportMode.Replace ? "This replaces all current local data. A recovery copy will be created first." : "This adds backup records and updates matching IDs.",
+            mode == BackupImportMode.Replace ? "Restore" : "Merge", "Cancel"));
+        button.IsEnabled = true;
+        if (_backupViewModel.StatusMessage is not null) await DisplayAlertAsync("Backup complete", _backupViewModel.StatusMessage, "OK");
+        else if (_backupViewModel.ErrorMessage is not null) await DisplayAlertAsync("Backup failed", _backupViewModel.ErrorMessage, "OK");
     }
 
 #if DEBUG
-    private View BuildDeveloperTools()
+    private void AddDeveloperTools()
     {
-        var resetButton = new Button { Text = "Reset local app data", TextColor = Colors.White, BackgroundColor = Color.FromArgb("#B42318"), CornerRadius = 8 };
+        var resetButton = new Button
+        {
+            Text = "Reset local app data",
+            TextColor = Colors.White,
+            BackgroundColor = Color.FromArgb("#B42318"),
+            CornerRadius = 8,
+            Margin = new Thickness(0, 16, 0, 0)
+        };
         resetButton.Clicked += async (_, _) =>
         {
             resetButton.IsEnabled = false;
-            await _resetViewModel.ResetAsync(() => DisplayAlertAsync("Reset local app data?", "This permanently deletes active workouts, workout history, activities, settings, and backup metadata, then restores the built-in templates and exercises.", "Reset data", "Cancel"));
+            await _viewModel.ResetAsync(() => DisplayAlertAsync(
+                "Reset local app data?",
+                "This permanently deletes active workouts, workout history, activities, settings, and backup metadata, then restores the built-in templates and exercises.",
+                "Reset data",
+                "Cancel"));
             resetButton.IsEnabled = true;
-            if (_resetViewModel.StatusMessage is not null) await DisplayAlertAsync("Reset complete", _resetViewModel.StatusMessage, "OK");
-            else if (_resetViewModel.ErrorMessage is not null) await DisplayAlertAsync("Reset failed", _resetViewModel.ErrorMessage, "OK");
+
+            if (_viewModel.StatusMessage is not null)
+                await DisplayAlertAsync("Reset complete", _viewModel.StatusMessage, "OK");
+            else if (_viewModel.ErrorMessage is not null)
+                await DisplayAlertAsync("Reset failed", _viewModel.ErrorMessage, "OK");
         };
-        return Section("Developer tools", new Label { Text = "Debug builds only. Use this to reset local data between test runs.", TextColor = Color.FromArgb("#687A95") }, resetButton);
+
+        AddAdditionalContent(new VerticalStackLayout
+        {
+            Spacing = 4,
+            Children =
+            {
+                new Label { Text = "Developer tools", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#B42318") },
+                new Label { Text = "Debug builds only. Use this to reset local data between test runs.", TextColor = Color.FromArgb("#687A95") },
+                resetButton
+            }
+        });
     }
 #endif
-
-    private static View Section(string title, params View[] children)
-    {
-        var stack = new VerticalStackLayout { Spacing = 8 };
-        stack.Children.Add(new Label { Text = title, FontAttributes = FontAttributes.Bold, FontSize = 19, TextColor = Color.FromArgb("#102A50") });
-        foreach (var child in children) stack.Children.Add(child);
-        return new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = 16, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = stack };
-    }
 }

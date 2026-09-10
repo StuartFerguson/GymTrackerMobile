@@ -1,4 +1,4 @@
-using GymTrackerMobile.Persistence;
+using GymTrackerMobile.Persistence.Backup;
 using GymTrackerMobile.UI;
 
 namespace GymTrackerMobile.UI.Tests;
@@ -6,92 +6,57 @@ namespace GymTrackerMobile.UI.Tests;
 public sealed class BackupSettingsViewModelTests
 {
     [Fact]
-    public async Task Export_reports_successful_backup()
+    public async Task Export_cancel_does_not_save_or_report_success()
     {
-        var service = new RecordingBackupService { ExportResult = new("backup.json", 4) };
-        var viewModel = new BackupSettingsViewModel(service, new RecordingSettingsRepository());
+        var transfer = new RecordingTransfer { SavePath = null };
+        var viewModel = new BackupSettingsViewModel(new RecordingBackupService(), transfer);
 
-        var result = await viewModel.ExportAsync();
+        await viewModel.ExportAsync();
 
-        Assert.True(result);
-        Assert.Equal("Backup exported to backup.json.", viewModel.StatusMessage);
-        Assert.Null(viewModel.ErrorMessage);
+        Assert.Null(viewModel.StatusMessage);
+        Assert.Equal(1, transfer.SaveCalls);
     }
 
     [Fact]
-    public async Task Export_reports_failure()
+    public async Task Import_cancel_does_not_confirm_or_mutate()
     {
-        var service = new RecordingBackupService { ExportError = new InvalidOperationException("Export failed") };
-        var viewModel = new BackupSettingsViewModel(service, new RecordingSettingsRepository());
+        var transfer = new RecordingTransfer { Picked = null };
+        var service = new RecordingBackupService();
+        var viewModel = new BackupSettingsViewModel(service, transfer);
 
-        var result = await viewModel.ExportAsync();
+        await viewModel.ImportAsync(BackupImportMode.Replace, () => Task.FromResult(true));
 
-        Assert.False(result);
-        Assert.Equal("Export failed", viewModel.ErrorMessage);
+        Assert.Equal(0, service.ImportCalls);
     }
 
     [Fact]
-    public async Task Invalid_import_does_not_request_confirmation_or_import()
+    public async Task Import_declined_does_not_mutate()
     {
-        var service = new RecordingBackupService { Validation = new(false, "Invalid backup file.", 0) };
-        var viewModel = new BackupSettingsViewModel(service, new RecordingSettingsRepository());
+        var transfer = new RecordingTransfer { Picked = new BackupFile("backup.json", "{}") };
+        var service = new RecordingBackupService();
+        var viewModel = new BackupSettingsViewModel(service, transfer);
 
-        var result = await viewModel.ImportAsync(Stream.Null, _ => Task.FromResult(true));
+        await viewModel.ImportAsync(BackupImportMode.Replace, () => Task.FromResult(false));
 
-        Assert.False(result);
-        Assert.Equal("Invalid backup file.", viewModel.ErrorMessage);
-        Assert.False(service.ImportCalled);
-    }
-
-    [Fact]
-    public async Task Replacement_import_requires_confirmation()
-    {
-        var service = new RecordingBackupService { Validation = new(true, null, 5), ImportResult = new("Replaced 5 records.") };
-        var viewModel = new BackupSettingsViewModel(service, new RecordingSettingsRepository());
-
-        var result = await viewModel.ImportAsync(Stream.Null, _ => Task.FromResult(false));
-
-        Assert.False(result);
-        Assert.False(service.ImportCalled);
-    }
-
-    [Fact]
-    public async Task Confirmed_replacement_import_reports_completion()
-    {
-        var service = new RecordingBackupService { Validation = new(true, null, 5), ImportResult = new("Replaced 5 records.") };
-        var viewModel = new BackupSettingsViewModel(service, new RecordingSettingsRepository());
-
-        var result = await viewModel.ImportAsync(Stream.Null, _ => Task.FromResult(true));
-
-        Assert.True(result);
-        Assert.True(service.ImportCalled);
-        Assert.Equal("Replaced 5 records.", viewModel.StatusMessage);
+        Assert.Equal(0, service.ImportCalls);
     }
 
     private sealed class RecordingBackupService : IBackupService
     {
-        public BackupExportResult? ExportResult { get; init; }
-        public Exception? ExportError { get; init; }
-        public BackupImportValidation Validation { get; init; } = new(true, null, 0);
-        public BackupImportResult ImportResult { get; init; } = new("Imported.");
-        public bool ImportCalled { get; private set; }
-
-        public Task<BackupExportResult> ExportAsync(CancellationToken cancellationToken = default) =>
-            ExportError is not null ? Task.FromException<BackupExportResult>(ExportError) : Task.FromResult(ExportResult!);
-
-        public Task<BackupImportValidation> ValidateImportAsync(Stream backup, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Validation);
-
-        public Task<BackupImportResult> ImportAsync(Stream backup, BackupImportMode mode, CancellationToken cancellationToken = default)
-        {
-            ImportCalled = true;
-            return Task.FromResult(ImportResult);
-        }
+        public int ImportCalls { get; private set; }
+        public Task<string> ExportAsync(CancellationToken cancellationToken = default) => Task.FromResult("json");
+        public Task<BackupValidationResult> ValidateAsync(string json, CancellationToken cancellationToken = default) => Task.FromResult(new BackupValidationResult());
+        public Task<BackupImportResult> ImportAsync(string json, BackupImportMode mode, CancellationToken cancellationToken = default)
+        { ImportCalls++; return Task.FromResult(new BackupImportResult()); }
     }
 
-    private sealed class RecordingSettingsRepository : ISettingsRepository
+    private sealed class RecordingTransfer : IBackupFileTransfer
     {
-        public Task<string?> GetSettingAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult<string?>("kg");
-        public Task SetSettingAsync(string key, string value, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public BackupFile? Picked { get; set; }
+        public string? SavePath { get; set; }
+        public int SaveCalls { get; private set; }
+        public Task<BackupFile?> PickBackupAsync(CancellationToken cancellationToken = default) => Task.FromResult(Picked);
+        public Task<string?> SaveBackupAsync(string json, string suggestedName, CancellationToken cancellationToken = default)
+        { SaveCalls++; return Task.FromResult(SavePath); }
     }
 }

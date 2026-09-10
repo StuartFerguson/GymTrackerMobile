@@ -1,69 +1,49 @@
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using GymTrackerMobile.Persistence;
+using GymTrackerMobile.Persistence.Backup;
 
 namespace GymTrackerMobile.UI;
 
-public sealed class BackupSettingsViewModel(IBackupService backupService, ISettingsRepository settings) : INotifyPropertyChanged
+public sealed class BackupSettingsViewModel(IBackupService backups, IBackupFileTransfer files) : INotifyPropertyChanged
 {
-    private string? _statusMessage;
-    private string? _errorMessage;
-    private string _unitLabel = "Kilograms (kg)";
-
     public event PropertyChangedEventHandler? PropertyChanged;
-    public string? StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
-    public string? ErrorMessage { get => _errorMessage; private set => Set(ref _errorMessage, value); }
-    public string UnitLabel { get => _unitLabel; private set => Set(ref _unitLabel, value); }
-    public string ImportConfirmationMessage { get; private set; } = string.Empty;
-    public string? LastExportPath { get; private set; }
+    public string? StatusMessage { get; private set; }
+    public string? ErrorMessage { get; private set; }
 
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var units = await settings.GetSettingAsync("units", cancellationToken);
-            UnitLabel = string.Equals(units, "kg", StringComparison.OrdinalIgnoreCase) ? "Kilograms (kg)" : "Kilograms (kg)";
-            ErrorMessage = null;
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException) { ErrorMessage = exception.Message; }
-    }
-
-    public async Task<bool> ExportAsync(CancellationToken cancellationToken = default)
+    public async Task ExportAsync(CancellationToken cancellationToken = default)
     {
         ClearMessages();
         try
         {
-            var result = await backupService.ExportAsync(cancellationToken);
-            LastExportPath = result.FilePath;
-            StatusMessage = $"Backup exported to {result.FileName}.";
-            return true;
+            var path = await files.SaveBackupAsync(await backups.ExportAsync(cancellationToken), $"gym-tracker-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json", cancellationToken);
+            if (path is not null) SetStatus($"Backup exported to {path}.");
         }
-        catch (Exception exception) when (exception is not OperationCanceledException) { ErrorMessage = exception.Message; return false; }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception ex) { SetError(ex.Message); }
     }
 
-    public async Task<bool> ImportAsync(Stream backup, Func<string, Task<bool>> confirm, BackupImportMode mode = BackupImportMode.Replace, CancellationToken cancellationToken = default)
+    public async Task ImportAsync(BackupImportMode mode, Func<Task<bool>> confirm, CancellationToken cancellationToken = default)
     {
         ClearMessages();
         try
         {
-            var validation = await backupService.ValidateImportAsync(backup, cancellationToken);
-            if (!validation.IsValid) { ErrorMessage = validation.ErrorMessage ?? "The backup file is invalid."; return false; }
-            ImportConfirmationMessage = mode == BackupImportMode.Replace
-                ? $"This will replace existing workouts, activities, settings, and backup metadata with {validation.RecordCount} imported records."
-                : $"This will merge {validation.RecordCount} imported records into your existing data. Existing records will be kept.";
-            if (!await confirm(ImportConfirmationMessage)) return false;
-            var result = await backupService.ImportAsync(backup, mode, cancellationToken);
-            StatusMessage = result.Message;
-            return true;
+            var file = await files.PickBackupAsync(cancellationToken);
+            if (file is null) return;
+            var validation = await backups.ValidateAsync(file.Content, cancellationToken);
+            if (!validation.IsValid)
+            {
+                SetError(string.Join(Environment.NewLine, validation.Errors.Select(x => $"{x.Path}: {x.Message}")));
+                return;
+            }
+            if (!await confirm()) return;
+            await backups.ImportAsync(file.Content, mode, cancellationToken);
+            SetStatus(mode == BackupImportMode.Replace ? "Backup restored." : "Backup merged.");
         }
-        catch (Exception exception) when (exception is not OperationCanceledException) { ErrorMessage = exception.Message; return false; }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception ex) { SetError(ex.Message); }
     }
 
-    private void ClearMessages() { StatusMessage = null; ErrorMessage = null; }
-    private void Set<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return;
-        field = value;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+    private void ClearMessages() { StatusMessage = null; ErrorMessage = null; Notify(nameof(StatusMessage)); Notify(nameof(ErrorMessage)); }
+    private void SetStatus(string value) { StatusMessage = value; Notify(nameof(StatusMessage)); }
+    private void SetError(string value) { ErrorMessage = value; Notify(nameof(ErrorMessage)); }
+    private void Notify(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
