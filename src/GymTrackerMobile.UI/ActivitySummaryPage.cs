@@ -75,7 +75,7 @@ public sealed class ActivitySummaryPage(ActivitySummaryViewModel viewModel) : Co
             Spacing = 8,
             Children =
             {
-                new Label { Text = viewModel.State.ActivityType, FontSize = 30, FontAttributes = FontAttributes.Bold, TextColor = Ink },
+                new Label { AutomationId = UiAutomationIds.ActivitySummaryType, Text = viewModel.State.ActivityType, FontSize = 30, FontAttributes = FontAttributes.Bold, TextColor = Ink },
                 new Label { Text = $"{viewModel.State.ActivityDateUtc?.ToLocalTime():ddd, dd MMM yyyy · HH:mm}", FontSize = 17, TextColor = Muted },
                 new Label { Text = viewModel.State.Details, FontSize = 20, TextColor = Teal }
             }

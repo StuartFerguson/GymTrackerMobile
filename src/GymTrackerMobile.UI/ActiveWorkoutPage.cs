@@ -48,6 +48,7 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
     private View BuildHeader()
     {
         var finish = new Button { Text = "Finish", FontSize = 14, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 16, Padding = new Thickness(12, 4) };
+        finish.AutomationId = UiAutomationIds.ActiveComplete;
         finish.Clicked += async (_, _) => { await _viewModel.CompleteAsync(); await Shell.Current.GoToAsync(".."); };
         var abandon = new Button { Text = "Abandon", FontSize = 14, BackgroundColor = Colors.White, TextColor = Color.FromArgb("#B42318"), BorderColor = Color.FromArgb("#F0B4AE"), BorderWidth = 1, CornerRadius = 16, Padding = new Thickness(10, 4) };
         abandon.Clicked += async (_, _) =>
@@ -88,10 +89,10 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
     private View BuildSetRow(ActiveWorkoutExercise exercise, ActiveWorkoutSet set)
     {
         var weightLabel = exercise.WeightEntryConvention == WeightEntryConvention.PerDumbbell ? "kg / dumbbell" : "kg";
-        var weight = new Entry { Text = set.WeightKilograms?.ToString("0.##"), Placeholder = weightLabel, Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
-        var reps = new Entry { Text = set.Repetitions?.ToString(), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
+        var weight = new Entry { AutomationId = UiAutomationIds.ActiveWeight(set.SetNumber), Text = set.WeightKilograms?.ToString("0.##"), Placeholder = weightLabel, Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
+        var reps = new Entry { AutomationId = UiAutomationIds.ActiveRepetitions(set.SetNumber), Text = set.Repetitions?.ToString(), Keyboard = Keyboard.Numeric, FontSize = 18, HorizontalTextAlignment = TextAlignment.Center, BackgroundColor = Colors.White };
         var notes = new Entry { Text = set.Notes, Placeholder = "Notes (optional)", FontSize = 15, TextColor = Muted, BackgroundColor = Colors.White };
-        var save = new Button { Text = set.Status == SetStatus.Completed ? "✓  Complete" : "Mark complete", FontSize = 14, BackgroundColor = set.Status == SetStatus.Completed ? Teal : Colors.White, TextColor = set.Status == SetStatus.Completed ? Colors.White : Ink, BorderColor = Color.FromArgb("#D5E0EC"), BorderWidth = 1, CornerRadius = 16, Padding = 4 };
+        var save = new Button { AutomationId = UiAutomationIds.ActiveSaveSet(set.SetNumber), Text = set.Status == SetStatus.Completed ? "✓  Complete" : "Mark complete", FontSize = 14, BackgroundColor = set.Status == SetStatus.Completed ? Teal : Colors.White, TextColor = set.Status == SetStatus.Completed ? Colors.White : Ink, BorderColor = Color.FromArgb("#D5E0EC"), BorderWidth = 1, CornerRadius = 16, Padding = 4 };
         save.Clicked += async (_, _) => { await _viewModel.UpdateSetAsync(set.SetNumber, exercise.ShowsWeight && double.TryParse(weight.Text, out var parsedWeight) ? parsedWeight : null, int.TryParse(exercise.ShowsWeight ? reps.Text : weight.Text, out var parsedReps) ? parsedReps : null, notes.Text); await _viewModel.SaveSetAsync(set.SetNumber); Render(); };
         var status = new Picker { Title = "Set status", FontSize = 14, TextColor = Ink, BackgroundColor = Colors.White, ItemsSource = Enum.GetValues<SetStatus>().Where(x => x != SetStatus.Planned).Select(x => x.ToString()).ToList(), SelectedItem = set.Status == SetStatus.Planned ? SetStatus.Incomplete.ToString() : set.Status.ToString() };
         status.SelectedIndexChanged += async (_, _) =>
@@ -127,9 +128,9 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
             }
         };
         var actions = new HorizontalStackLayout { Spacing = 8 };
-        var accept = new Button { Text = "Accept", FontSize = 13, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 14, Padding = new Thickness(12, 3) };
-        var edit = new Button { Text = "Edit", FontSize = 13, BackgroundColor = Colors.White, TextColor = Ink, CornerRadius = 14, Padding = new Thickness(12, 3) };
-        var ignore = new Button { Text = "Ignore", FontSize = 13, BackgroundColor = Colors.White, TextColor = Muted, CornerRadius = 14, Padding = new Thickness(12, 3) };
+        var accept = new Button { AutomationId = UiAutomationIds.RecommendationAccept, Text = "Accept", FontSize = 13, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 14, Padding = new Thickness(12, 3) };
+        var edit = new Button { AutomationId = UiAutomationIds.RecommendationEdit, Text = "Edit", FontSize = 13, BackgroundColor = Colors.White, TextColor = Ink, CornerRadius = 14, Padding = new Thickness(12, 3) };
+        var ignore = new Button { AutomationId = UiAutomationIds.RecommendationIgnore, Text = "Ignore", FontSize = 13, BackgroundColor = Colors.White, TextColor = Muted, CornerRadius = 14, Padding = new Thickness(12, 3) };
         accept.Clicked += async (_, _) => { await _viewModel.AcceptRecommendationAsync(); Render(); };
         edit.Clicked += async (_, _) => { await _viewModel.EditRecommendationAsync(recommendation.ProposedWeightKilograms ?? 0); Render(); };
         ignore.Clicked += async (_, _) => { await _viewModel.IgnoreRecommendationAsync(); Render(); };

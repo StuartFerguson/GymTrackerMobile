@@ -10,7 +10,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
     private readonly StartWorkoutViewModel _viewModel;
     private readonly Grid _templates = new() { ColumnSpacing = 10, RowSpacing = 10 };
     private readonly HorizontalStackLayout _styleSelector = new() { Spacing = 8, HorizontalOptions = LayoutOptions.Center };
-    private readonly Button _start = new() { Text = "▶  Start Workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60 };
+    private readonly Button _start = new() { AutomationId = UiAutomationIds.StartWorkout, Text = "▶  Start Workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60 };
     private readonly Button _resume = new() { Text = "↻  Resume workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60, IsVisible = false };
     private readonly Label _error = new() { FontSize = 15, TextColor = Color.FromArgb("#B42318"), HorizontalTextAlignment = TextAlignment.Center, IsVisible = false };
 
@@ -106,7 +106,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         cardGrid.Add(new Image { Source = "start_chevron.svg", WidthRequest = 22, HeightRequest = 22, HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.Center }, 0, 0);
         cardGrid.Add(new Label { Text = template.Name, FontSize = 21, FontAttributes = FontAttributes.Bold, TextColor = Ink }, 0, 1);
         cardGrid.Add(new Label { Text = template.Description, FontSize = 15, TextColor = Muted, LineBreakMode = LineBreakMode.TailTruncation }, 0, 2);
-        var card = new Border { BackgroundColor = selected ? Color.FromArgb("#F0FBFA") : Colors.White, Stroke = selected ? Teal : Color.FromArgb("#E2EBF5"), StrokeThickness = selected ? 2 : 1, Padding = new Thickness(14, 16), StrokeShape = new RoundRectangle { CornerRadius = 20 }, Content = cardGrid };
+        var card = new Border { AutomationId = template.Name.Equals("Push", StringComparison.OrdinalIgnoreCase) ? UiAutomationIds.StartTemplatePush : $"start-template-{template.Name.ToLowerInvariant().Replace(' ', '-')}", BackgroundColor = selected ? Color.FromArgb("#F0FBFA") : Colors.White, Stroke = selected ? Teal : Color.FromArgb("#E2EBF5"), StrokeThickness = selected ? 2 : 1, Padding = new Thickness(14, 16), StrokeShape = new RoundRectangle { CornerRadius = 20 }, Content = cardGrid };
         Grid.SetColumn(card, index % 2);
         Grid.SetRow(card, index / 2);
         var tap = new TapGestureRecognizer();

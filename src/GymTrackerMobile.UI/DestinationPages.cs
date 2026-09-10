@@ -84,10 +84,10 @@ public sealed class HistoryPage : ContentPage
             return;
         }
         _stateMessage.IsVisible = false;
-        foreach (var item in _viewModel.Items) _items.Children.Add(BuildItem(item));
+        for (var index = 0; index < _viewModel.Items.Count; index++) _items.Children.Add(BuildItem(_viewModel.Items[index], index));
     }
 
-    private static View BuildItem(HistoryItem item)
+    private static View BuildItem(HistoryItem item, int index)
     {
         var accent = item.IsWorkout ? Teal : Color.FromArgb("#F28C38");
         var iconBackground = item.IsWorkout ? Color.FromArgb("#E8F8F7") : Color.FromArgb("#FFF1E8");
@@ -163,7 +163,7 @@ public sealed class HistoryPage : ContentPage
         Microsoft.Maui.Controls.Grid.SetColumn(details, 1);
         Microsoft.Maui.Controls.Grid.SetColumn(chevron, 2);
 
-        var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
+        var card = new Border { AutomationId = UiAutomationIds.HistoryItem(index), BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
         var tap = new TapGestureRecognizer();
         tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
             ? $"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}"

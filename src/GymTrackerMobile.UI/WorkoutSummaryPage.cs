@@ -79,7 +79,7 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
             VerticalOptions = LayoutOptions.Center,
             Children =
             {
-                new Label { Text = state.WorkoutName, FontSize = 24, FontAttributes = FontAttributes.Bold, TextColor = Ink, LineBreakMode = LineBreakMode.NoWrap },
+                new Label { AutomationId = UiAutomationIds.WorkoutSummaryName, Text = state.WorkoutName, FontSize = 24, FontAttributes = FontAttributes.Bold, TextColor = Ink, LineBreakMode = LineBreakMode.NoWrap },
                 new Label { Text = $"✓  {(state.IsComplete ? "Completed" : "Partially logged")}  ·  {state.CompletedAtUtc?.ToLocalTime():dd MMM yyyy}", FontSize = 14, TextColor = state.IsComplete ? Teal : Color.FromArgb("#B54708"), LineBreakMode = LineBreakMode.NoWrap },
                 new Label { Text = state.MuscleGroups, FontSize = 16, TextColor = Muted }
             }
@@ -95,12 +95,12 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) }, ColumnSpacing = 8 };
         grid.Add(Metric("◷", state.Duration.ToString(@"h\:mm\:ss"), "Duration"), 0, 0);
         grid.Add(Metric("▰", $"{state.TotalVolumeKilograms:N0} kg", "Training Volume"), 1, 0);
-        grid.Add(Metric("♜", $"{state.CompletedSetCount} / {state.PlannedSetCount}", "Sets Completed"), 2, 0);
+        grid.Add(Metric("♜", $"{state.CompletedSetCount} / {state.PlannedSetCount}", "Sets Completed", UiAutomationIds.WorkoutSummaryCompletedSets), 2, 0);
         grid.Add(Metric("♨", state.CaloriesEstimated.ToString(), "Calories Est."), 3, 0);
         return grid;
     }
 
-    private static View Metric(string icon, string value, string label) => new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, Padding = new Thickness(5, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Center, Children = { new Label { Text = icon, FontSize = 26, TextColor = Color.FromArgb("#52667F"), HorizontalTextAlignment = TextAlignment.Center }, new Label { Text = value, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center }, new Label { Text = label, FontSize = 12, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center } } } };
+    private static View Metric(string icon, string value, string label, string? automationId = null) => new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, Padding = new Thickness(5, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Center, Children = { new Label { Text = icon, FontSize = 26, TextColor = Color.FromArgb("#52667F"), HorizontalTextAlignment = TextAlignment.Center }, new Label { AutomationId = automationId, Text = value, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center }, new Label { Text = label, FontSize = 12, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center } } } };
 
     private static View BuildStatus(WorkoutSummaryState state)
     {
