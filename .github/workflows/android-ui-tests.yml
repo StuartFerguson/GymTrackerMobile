@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Appium
         run: |
-          npm install --global appium@2
+          npm install --global appium@3
           appium driver install uiautomator2
 
       - name: Run Android UI journeys
