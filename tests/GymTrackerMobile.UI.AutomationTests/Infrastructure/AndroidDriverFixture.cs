@@ -27,7 +27,7 @@ public sealed class AndroidDriverFixture : IAsyncLifetime
         options.AddAdditionalAppiumOption("appium:noReset", false);
         options.AddAdditionalAppiumOption("appium:fullReset", false);
         options.AddAdditionalAppiumOption("appium:autoGrantPermissions", true);
-        options.AddAdditionalAppiumOption("gymtracker.uiTestMode", true);
+        options.AddAdditionalAppiumOption("appium:optionalIntentArguments", "-e gymtracker.uiTestMode true");
         Driver = new AndroidDriver(Settings.ServerUrl, options, TimeSpan.FromSeconds(90));
         Driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
         return Task.CompletedTask;
@@ -56,4 +56,10 @@ public sealed class AndroidDriverFixture : IAsyncLifetime
     }
 
     public void SetFailureDirectory(string directory) => _failureDirectory = directory;
+
+    public void ResetApplication()
+    {
+        Driver?.TerminateApp("com.companyname.gymtrackermobile");
+        Driver?.ActivateApp("com.companyname.gymtrackermobile");
+    }
 }

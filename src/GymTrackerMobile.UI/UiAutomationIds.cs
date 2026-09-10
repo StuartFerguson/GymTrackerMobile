@@ -3,6 +3,9 @@ namespace GymTrackerMobile.UI;
 public static class UiAutomationIds
 {
     public const string StartWorkout = "start-workout";
+    public const string DashboardStartWorkout = "dashboard-start-workout";
+    public const string DashboardLogActivity = "dashboard-log-activity";
+    public const string DashboardHistory = "dashboard-history";
     public const string ActiveComplete = "active-complete";
     public const string RecommendationAccept = "recommendation-accept";
     public const string RecommendationEdit = "recommendation-edit";
@@ -20,5 +23,7 @@ public static class UiAutomationIds
     public static string ActiveSaveSet(int setNumber) => $"active-save-set-{setNumber}";
     public static string ActivityType(string type) => $"activity-type-{type.ToLowerInvariant()}";
     public static string HistoryItem(int index) => $"history-item-{index}";
+    public static string HistoryName(int index) => $"history-name-{index}";
+    public static string HistoryDetails(int index) => $"history-details-{index}";
     public static string HistoryProgress(int index) => $"history-progress-{index}";
 }

@@ -42,7 +42,7 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(52) } };
         heading.Add(new VerticalStackLayout { Spacing = 2, Children = { new Label { Text = exercise.Name, FontSize = 29, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = exercise.MuscleAndMode, FontSize = 18, TextColor = Muted } } }, 0, 0);
         heading.Add(new Label { Text = $"{_viewModel.State.ExerciseNumber} of {_viewModel.State.ExerciseList.Count}", FontSize = 17, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
-        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), BuildRecommendation(), BuildNavigation() } };
+        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), new Label { AutomationId = "active-error", Text = _viewModel.State.ErrorMessage, TextColor = Color.FromArgb("#B42318"), IsVisible = _viewModel.State.ErrorMessage is not null }, BuildRecommendation(), BuildNavigation() } };
     }
 
     private View BuildHeader()
@@ -123,7 +123,7 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
             Children =
             {
                 new Label { Text = "RECOMMENDATION", FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = Muted },
-                new Label { Text = recommendation.Outcome is null ? "Keep it up!" : recommendation.Outcome.ToString(), FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink },
+                new Label { AutomationId = "recommendation-outcome", Text = recommendation.Outcome is null ? "Keep it up!" : recommendation.Outcome.ToString(), FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink },
                 new Label { Text = recommendation.Explanation, FontSize = 15, TextColor = Muted }
             }
         };
@@ -131,10 +131,11 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         var accept = new Button { AutomationId = UiAutomationIds.RecommendationAccept, Text = "Accept", FontSize = 13, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 14, Padding = new Thickness(12, 3) };
         var edit = new Button { AutomationId = UiAutomationIds.RecommendationEdit, Text = "Edit", FontSize = 13, BackgroundColor = Colors.White, TextColor = Ink, CornerRadius = 14, Padding = new Thickness(12, 3) };
         var ignore = new Button { AutomationId = UiAutomationIds.RecommendationIgnore, Text = "Ignore", FontSize = 13, BackgroundColor = Colors.White, TextColor = Muted, CornerRadius = 14, Padding = new Thickness(12, 3) };
+        var editWeight = new Entry { AutomationId = "recommendation-edit-weight", Text = recommendation.ProposedWeightKilograms?.ToString("0.##"), Keyboard = Keyboard.Numeric, WidthRequest = 90, BackgroundColor = Colors.White };
         accept.Clicked += async (_, _) => { await _viewModel.AcceptRecommendationAsync(); Render(); };
-        edit.Clicked += async (_, _) => { await _viewModel.EditRecommendationAsync(recommendation.ProposedWeightKilograms ?? 0); Render(); };
+        edit.Clicked += async (_, _) => { if (double.TryParse(editWeight.Text, out var weight)) await _viewModel.EditRecommendationAsync(weight); Render(); };
         ignore.Clicked += async (_, _) => { await _viewModel.IgnoreRecommendationAsync(); Render(); };
-        actions.Children.Add(accept); actions.Children.Add(edit); actions.Children.Add(ignore);
+        actions.Children.Add(accept); actions.Children.Add(editWeight); actions.Children.Add(edit); actions.Children.Add(ignore);
         details.Children.Add(actions);
         return new Border
         {

@@ -112,11 +112,11 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
     private static View BuildExerciseSection(WorkoutSummaryState state)
     {
         var layout = new VerticalStackLayout { Spacing = 10, Children = { new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(90) }, Children = { new Label { Text = "Exercises", FontSize = 27, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = $"{state.CompletedSetCount} / {state.PlannedSetCount} sets", FontSize = 16, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center } } } } };
-        foreach (var exercise in state.ExerciseList) layout.Children.Add(BuildExerciseCard(exercise));
+        for (var index = 0; index < state.ExerciseList.Count; index++) layout.Children.Add(BuildExerciseCard(state.ExerciseList[index], index));
         return layout;
     }
 
-    private static View BuildExerciseCard(WorkoutSummaryExercise exercise)
+    private static View BuildExerciseCard(WorkoutSummaryExercise exercise, int index)
     {
         var statuses = string.Join(" · ", exercise.Sets.Where(x => x.Status != SetStatus.Completed).Select(x => $"Set {x.SetNumber}: {x.StatusLabel}"));
         var details = new VerticalStackLayout { Spacing = 4, Children = { new Label { Text = exercise.Name, FontSize = 19, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = $"{exercise.CompletedSetCount} / {exercise.PlannedSetCount} sets", FontSize = 15, TextColor = Muted }, new Label { Text = $"Planned  {exercise.PlannedSummary}     Completed  {exercise.CompletedSummary}", FontSize = 14, TextColor = Muted } } };
@@ -126,7 +126,11 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
         grid.Add(new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = new Image { Source = exercise.ImageSource, Aspect = Aspect.AspectFit } }, 0, 0);
         grid.Add(details, 1, 0);
         grid.Add(volume, 2, 0);
-        return new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = grid };
+        var card = new Border { AutomationId = UiAutomationIds.HistoryProgress(index), BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = grid };
+        var tap = new TapGestureRecognizer();
+        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(NavigationRoutes.ExerciseProgress);
+        card.GestureRecognizers.Add(tap);
+        return card;
     }
 
     private static View BuildNotes(WorkoutSummaryState state)

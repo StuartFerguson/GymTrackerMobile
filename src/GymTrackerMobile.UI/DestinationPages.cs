@@ -117,8 +117,8 @@ public sealed class HistoryPage : ContentPage
             VerticalTextAlignment = TextAlignment.Center
         };
         var category = new Label { Text = item.IsWorkout ? "WORKOUT" : "ACTIVITY", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = accent };
-        var name = new Label { Text = item.Name, FontSize = 19, FontAttributes = FontAttributes.None, TextColor = Ink };
-        var itemDetails = new Label { Text = item.Details, FontSize = 14, TextColor = accent };
+        var name = new Label { AutomationId = UiAutomationIds.HistoryName(index), Text = item.Name, FontSize = 19, FontAttributes = FontAttributes.None, TextColor = Ink };
+        var itemDetails = new Label { AutomationId = UiAutomationIds.HistoryDetails(index), Text = item.Details, FontSize = 14, TextColor = accent };
         var notes = new Label { Text = item.Notes, FontSize = 13, TextColor = Muted, IsVisible = !string.IsNullOrWhiteSpace(item.Notes), LineBreakMode = LineBreakMode.WordWrap };
         var details = new Grid
         {
