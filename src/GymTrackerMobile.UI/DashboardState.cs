@@ -10,6 +10,8 @@ public sealed record DashboardActivitySummary(ActivityType Type, DateTime Activi
 
 public sealed record DashboardRecentItem(string Title, string Detail, DateTime DateUtc);
 
+public sealed record DashboardActiveWorkoutSummary(Guid Id, string Name);
+
 public sealed class DashboardState
 {
     public string NextSessionName { get; init; } = string.Empty;
@@ -20,6 +22,7 @@ public sealed class DashboardState
     public bool IsEmptyState { get; init; }
     public string TrainingSummary { get; init; } = string.Empty;
     public IReadOnlyList<DashboardRecentItem> RecentItems { get; init; } = [];
+    public DashboardActiveWorkoutSummary? ActiveWorkout { get; init; }
 }
 
 public static class DashboardStateBuilder
@@ -28,7 +31,8 @@ public static class DashboardStateBuilder
         DateTime date,
         IReadOnlyList<DashboardTemplateSummary> templates,
         IReadOnlyList<DashboardWorkoutSummary> workouts,
-        IReadOnlyList<DashboardActivitySummary> activities)
+        IReadOnlyList<DashboardActivitySummary> activities,
+        DashboardActiveWorkoutSummary? activeWorkout = null)
     {
         var today = date.Date;
         var planned = FindNextPlan(today, templates);
@@ -55,7 +59,8 @@ public static class DashboardStateBuilder
             ShowActivityQuickStart = isToday && dayPlan.Kind == DashboardDayKind.Activity,
             IsEmptyState = !hasHistory,
             TrainingSummary = $"{workouts.Count} {Pluralize(workouts.Count, "workout", "workouts")} · {activities.Count} {Pluralize(activities.Count, "activity", "activities")}",
-            RecentItems = recentItems
+            RecentItems = recentItems,
+            ActiveWorkout = activeWorkout
         };
     }
 

@@ -19,7 +19,11 @@ public sealed record StartWorkoutState
     public string SelectedTemplateName { get; init; } = string.Empty;
     public bool IsStarting { get; init; }
     public string? ErrorMessage { get; init; }
-    public bool CanStart => SelectedTemplateId is not null && !IsStarting;
+    public Guid? ActiveWorkoutId { get; init; }
+    public string ActiveWorkoutName { get; init; } = string.Empty;
+    public bool HasActiveWorkout => ActiveWorkoutId is not null;
+    public bool CanResume => HasActiveWorkout && !IsStarting;
+    public bool CanStart => SelectedTemplateId is not null && !IsStarting && !HasActiveWorkout;
 }
 
 public static class StartWorkoutTemplatePresentation
