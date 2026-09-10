@@ -3,7 +3,8 @@ using GymTrackerMobile.UI.AutomationTests.Pages;
 
 namespace GymTrackerMobile.UI.AutomationTests.Journeys;
 
-public sealed class ActivityJourneyTests : IClassFixture<AndroidDriverFixture>
+[Collection("Android UI")]
+public sealed class ActivityJourneyTests
 {
     private readonly AndroidDriverFixture _fixture;
 
