@@ -22,6 +22,7 @@ public static class MauiProgram
         ConfigureScrollViewEdgeEffects();
 
         builder.Services.AddTransient<StartupPage>();
+        builder.Services.AddTransient<StartupViewModel>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<StartWorkoutPage>();
         builder.Services.AddTransient<ActiveWorkoutPage>();

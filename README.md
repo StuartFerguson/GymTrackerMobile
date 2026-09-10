@@ -36,7 +36,7 @@ With an emulator running or a device connected, launch the app from Visual Studi
 dotnet build src/GymTrackerMobile/GymTrackerMobile.csproj -f net10.0-android -t:Run
 ```
 
-Startup is local-only and renders a minimal Gym Tracker page. The application database is an EF Core SQLite file named `gym-tracker.db` in `FileSystem.AppDataDirectory`; pending EF migrations are applied before storage-dependent features use it. No account, backend, or network service is required.
+Startup shows a branded Gym Tracker screen while the local EF Core SQLite database is migrated and seeded, then transitions to the app shell. Initialization failures remain recoverable through an in-app retry action. The database is stored as `gym-tracker.db` in `FileSystem.AppDataDirectory`; no account, backend, or network service is required.
 
 In `DEBUG` builds, open **Backup & Settings → Developer tools** and choose **Reset local app data** to clear active workouts, workout history, activities, settings, and backup metadata. The action requires confirmation and restores the built-in templates and exercises. It is intentionally excluded from production builds.
 

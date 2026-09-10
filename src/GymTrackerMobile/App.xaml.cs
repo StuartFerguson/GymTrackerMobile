@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace GymTrackerMobile;
 
 public partial class App : Application
@@ -12,6 +14,14 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new AppShell(_services));
+        Window? window = null;
+        window = new Window(new GymTrackerMobile.UI.StartupPage(
+            _services.GetRequiredService<GymTrackerMobile.UI.StartupViewModel>(),
+            () =>
+            {
+                window!.Page = new AppShell(_services);
+                return Task.CompletedTask;
+            }));
+        return window;
     }
 }
