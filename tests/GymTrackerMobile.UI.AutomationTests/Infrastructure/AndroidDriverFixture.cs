@@ -28,6 +28,9 @@ public sealed class AndroidDriverFixture : IAsyncLifetime
         options.AddAdditionalAppiumOption("appium:fullReset", false);
         options.AddAdditionalAppiumOption("appium:autoGrantPermissions", true);
         options.AddAdditionalAppiumOption("appium:optionalIntentArguments", "-e gymtracker.uiTestMode true");
+        options.AddAdditionalAppiumOption("appium:adbExecTimeout", 120_000);
+        options.AddAdditionalAppiumOption("appium:uiautomator2ServerInstallTimeout", 120_000);
+        options.AddAdditionalAppiumOption("appium:uiautomator2ServerLaunchTimeout", 120_000);
         Driver = new AndroidDriver(Settings.ServerUrl, options, TimeSpan.FromSeconds(90));
         Driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
         return Task.CompletedTask;
