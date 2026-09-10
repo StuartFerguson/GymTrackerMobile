@@ -147,27 +147,40 @@ public sealed class DashboardPage : ContentPage
         };
     }
 
-    private static View BuildProgressBanner() => new Border
+    private static View BuildProgressBanner()
     {
-        BackgroundColor = Colors.White,
-        Stroke = Color.FromArgb("#E2EBF5"),
-        StrokeThickness = 1,
-        Padding = new Thickness(24, 20),
-        StrokeShape = new RoundRectangle { CornerRadius = 24 },
-        Content = new Grid
+        var content = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(80) },
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(80) }
+        };
+        content.Add(new VerticalStackLayout
+        {
+            Spacing = 4,
             Children =
             {
-                new VerticalStackLayout
-                {
-                    Spacing = 4,
-                    Children = { new Label { Text = "Small steps. Big results.", FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = "Stay consistent and track your progress.", FontSize = 16, TextColor = Muted } }
-                },
-                new Image { Source = "dashboard_progress.svg", WidthRequest = 72, HeightRequest = 54, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center }
+                new Label { Text = "Small steps. Big results.", FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink },
+                new Label { Text = "Stay consistent and track your progress.", FontSize = 16, TextColor = Muted }
             }
-        }
-    };
+        }, 0, 0);
+        content.Add(new Image
+        {
+            Source = "dashboard_progress.svg",
+            WidthRequest = 72,
+            HeightRequest = 54,
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        }, 1, 0);
+
+        return new Border
+        {
+            BackgroundColor = Colors.White,
+            Stroke = Color.FromArgb("#E2EBF5"),
+            StrokeThickness = 1,
+            Padding = new Thickness(24, 20),
+            StrokeShape = new RoundRectangle { CornerRadius = 24 },
+            Content = content
+        };
+    }
 
     private View BuildBottomNavigation()
     {
