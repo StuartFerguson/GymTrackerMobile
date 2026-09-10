@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using GymTrackerMobile.Persistence.Backup;
 
 namespace GymTrackerMobile.Persistence;
 
@@ -16,6 +17,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISettingsRepository, SettingsRepository>();
         services.AddScoped<IBackupMetadataRepository, BackupMetadataRepository>();
         services.AddScoped<IAppDataResetService, AppDataResetService>();
+        services.AddScoped<GymTrackerBackupValidator>();
+        services.AddScoped<GymTrackerBackupMapper>();
+        services.AddScoped<IBackupFileStore, LocalBackupFileStore>();
+        services.AddScoped<IBackupService, BackupService>();
         return services;
     }
 }
