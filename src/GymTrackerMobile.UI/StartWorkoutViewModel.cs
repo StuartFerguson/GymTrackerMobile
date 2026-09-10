@@ -36,7 +36,14 @@ public sealed class StartWorkoutViewModel
             .OrderBy(x => x.Name switch { "Push" => 0, "Pull" => 1, "Legs" => 2, "Full Body" => 3, _ => 4 })
             .Select(template => StartWorkoutTemplatePresentation.Build(template, _illustrationPreference.SelectedStyle))
             .ToList();
-        State = State with { Templates = templates, IllustrationStyle = _illustrationPreference.SelectedStyle };
+        var activeWorkout = await _workouts.GetActiveWorkoutAsync(cancellationToken);
+        State = State with
+        {
+            Templates = templates,
+            IllustrationStyle = _illustrationPreference.SelectedStyle,
+            ActiveWorkoutId = activeWorkout?.Id,
+            ActiveWorkoutName = activeWorkout?.TemplateName ?? string.Empty
+        };
         if (templateId is Guid id && templates.Any(x => x.Id == id)) SelectTemplate(id);
     }
 
@@ -69,7 +76,7 @@ public sealed class StartWorkoutViewModel
 
     public async Task StartWorkoutAsync(CancellationToken cancellationToken = default)
     {
-        if (State.SelectedTemplateId is not Guid templateId || State.IsStarting) return;
+        if (State.SelectedTemplateId is not Guid templateId || State.IsStarting || State.HasActiveWorkout) return;
         State = State with { IsStarting = true, ErrorMessage = null };
         try
         {
@@ -83,6 +90,12 @@ public sealed class StartWorkoutViewModel
         }
 
         State = State with { IsStarting = false };
+    }
+
+    public Task ResumeWorkoutAsync(CancellationToken cancellationToken = default)
+    {
+        if (State.ActiveWorkoutId is not Guid sessionId || State.IsStarting) return Task.CompletedTask;
+        return _navigate(ActiveWorkoutRoutes.For(sessionId));
     }
 
     public Task GoBackAsync() => _navigate("..");

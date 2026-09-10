@@ -17,7 +17,27 @@ public sealed class DashboardViewModelTests
 
         await viewModel.LoadAsync();
 
-        Assert.Equal(["database", "templates", "workouts", "activities"], events);
+        Assert.Equal(["database", "templates", "active", "workouts", "activities"], events);
+    }
+
+    [Fact]
+    public async Task Loading_dashboard_exposes_active_workout_and_resume_navigates_to_it()
+    {
+        var session = new WorkoutSession { Id = Guid.NewGuid(), TemplateName = "Push", IsActive = true };
+        var routes = new List<string>();
+        var viewModel = new DashboardViewModel(
+            new RecordingWorkoutRepository([], session),
+            new RecordingActivityRepository([]),
+            new RecordingDatabaseInitializer([]),
+            route => { routes.Add(route); return Task.CompletedTask; });
+
+        await viewModel.LoadAsync();
+        viewModel.ResumeWorkoutCommand.Execute(null);
+        await Task.Yield();
+
+        Assert.Equal(session.Id, viewModel.State.ActiveWorkout?.Id);
+        Assert.Equal("Push", viewModel.State.ActiveWorkout?.Name);
+        Assert.Equal(ActiveWorkoutRoutes.For(session.Id), routes.Single());
     }
 
     [Fact]
@@ -65,7 +85,7 @@ public sealed class DashboardViewModelTests
         }
     }
 
-    private sealed class RecordingWorkoutRepository(List<string> events) : IWorkoutRepository
+    private sealed class RecordingWorkoutRepository(List<string> events, WorkoutSession? activeWorkout = null) : IWorkoutRepository
     {
         public Task<IReadOnlyList<WorkoutTemplate>> GetTemplatesAsync(CancellationToken cancellationToken = default)
         {
@@ -81,7 +101,11 @@ public sealed class DashboardViewModelTests
 
         public Task<WorkoutSession> StartWorkoutAsync(Guid templateId, DateTime startedAtUtc, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task SaveSetAsync(WorkoutSet set, CancellationToken cancellationToken = default) => throw new NotImplementedException();
-        public Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<WorkoutSession?> GetActiveWorkoutAsync(CancellationToken cancellationToken = default)
+        {
+            events.Add("active");
+            return Task.FromResult(activeWorkout);
+        }
         public Task CompleteWorkoutAsync(Guid sessionId, DateTime completedAtUtc, string? notes, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     }
 

@@ -22,6 +22,7 @@ public sealed class DashboardViewModel
         _databaseInitializer = databaseInitializer;
         _navigate = navigate ?? (route => Shell.Current.GoToAsync(route));
         StartWorkoutCommand = new Command(async () => await StartWorkoutAsync());
+        ResumeWorkoutCommand = new Command(async () => await ResumeWorkoutAsync());
         LogActivityCommand = new Command(async () => await LogActivityAsync());
         WeeklyPlanCommand = new Command(async () => await _navigate(DashboardRoutes.WeeklyPlan));
         ProgressCommand = new Command(async () => await _navigate(NavigationRoutes.ExerciseProgress));
@@ -30,6 +31,7 @@ public sealed class DashboardViewModel
     }
 
     public ICommand StartWorkoutCommand { get; }
+    public ICommand ResumeWorkoutCommand { get; }
     public ICommand LogActivityCommand { get; }
     public ICommand WeeklyPlanCommand { get; }
     public ICommand ProgressCommand { get; }
@@ -43,6 +45,7 @@ public sealed class DashboardViewModel
         var nowUtc = DateTime.UtcNow;
         var fromUtc = nowUtc.Date.AddDays(-30);
         var templates = await _workouts.GetTemplatesAsync(cancellationToken);
+        var activeWorkout = await _workouts.GetActiveWorkoutAsync(cancellationToken);
         var workouts = await _workouts.GetCompletedWorkoutsAsync(fromUtc, nowUtc.Date.AddDays(1), cancellationToken);
         var activities = await _activities.GetActivitiesAsync(fromUtc, nowUtc.Date.AddDays(1), cancellationToken);
 
@@ -52,10 +55,15 @@ public sealed class DashboardViewModel
             workouts.Where(x => x.CompletedAtUtc is not null)
                 .Select(x => new DashboardWorkoutSummary(x.TemplateName, x.CompletedAtUtc!.Value))
                 .ToList(),
-            activities.Select(x => new DashboardActivitySummary(x.ActivityType, x.ActivityDateUtc, x.DurationMinutes)).ToList());
+            activities.Select(x => new DashboardActivitySummary(x.ActivityType, x.ActivityDateUtc, x.DurationMinutes)).ToList(),
+            activeWorkout is null ? null : new DashboardActiveWorkoutSummary(activeWorkout.Id, activeWorkout.TemplateName));
     }
 
     private Task StartWorkoutAsync() => _navigate(DashboardRoutes.StartWorkout);
+
+    private Task ResumeWorkoutAsync() => State.ActiveWorkout is { } active
+        ? _navigate(ActiveWorkoutRoutes.For(active.Id))
+        : Task.CompletedTask;
 
     private Task LogActivityAsync() => _navigate(DashboardRoutes.LogActivity);
 }

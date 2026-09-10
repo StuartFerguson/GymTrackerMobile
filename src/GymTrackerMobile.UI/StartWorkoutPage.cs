@@ -11,6 +11,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
     private readonly Grid _templates = new() { ColumnSpacing = 10, RowSpacing = 10 };
     private readonly HorizontalStackLayout _styleSelector = new() { Spacing = 8, HorizontalOptions = LayoutOptions.Center };
     private readonly Button _start = new() { Text = "▶  Start Workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60 };
+    private readonly Button _resume = new() { Text = "↻  Resume workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60, IsVisible = false };
     private readonly Label _error = new() { FontSize = 15, TextColor = Color.FromArgb("#B42318"), HorizontalTextAlignment = TextAlignment.Center, IsVisible = false };
 
     public StartWorkoutPage(StartWorkoutViewModel viewModel)
@@ -19,6 +20,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         Title = "Start workout";
         BackgroundColor = Color.FromArgb("#F8FBFF");
         _start.Command = viewModel.StartCommand;
+        _resume.Clicked += async (_, _) => await _viewModel.ResumeWorkoutAsync();
 
         var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
         content.Add(BuildBody(), 0, 0);
@@ -45,7 +47,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         Content = new VerticalStackLayout
         {
             Padding = new Thickness(20, 22, 20, 28), Spacing = 18,
-            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _templates, _start, _error, BuildConsistencyBanner() }
+            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _resume, _templates, _start, _error, BuildConsistencyBanner() }
         }
     };
 
@@ -139,6 +141,8 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         _templates.ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) };
         for (var index = 0; index < _viewModel.State.Templates.Count; index++) _templates.Children.Add(BuildTemplateCard(_viewModel.State.Templates[index], index));
         _start.IsEnabled = _viewModel.State.CanStart;
+        _resume.IsVisible = _viewModel.State.CanResume;
+        _resume.Text = _viewModel.State.HasActiveWorkout ? $"↻  Resume {_viewModel.State.ActiveWorkoutName}" : "↻  Resume workout";
         _start.Text = _viewModel.State.IsStarting ? "Starting…" : _viewModel.State.SelectedTemplateId is null ? "Select a workout" : $"▶  Start {_viewModel.State.SelectedTemplateName}";
         _error.Text = _viewModel.State.ErrorMessage;
         _error.IsVisible = _viewModel.State.ErrorMessage is not null;

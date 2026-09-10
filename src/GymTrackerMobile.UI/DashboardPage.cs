@@ -16,6 +16,7 @@ public sealed class DashboardPage : ContentPage
     private readonly Label _nextSession = new() { FontSize = 40, FontAttributes = FontAttributes.Bold, TextColor = Ink };
     private readonly Label _sessionDetails = new() { FontSize = 18, TextColor = Muted };
     private readonly Button _startWorkout = CreatePrimaryButton("▶  Start workout");
+    private readonly Button _resumeWorkout = CreatePrimaryButton("↻  Resume workout");
     private readonly Button _logActivity = CreatePrimaryButton("Log activity");
     private readonly Label _recent = new() { FontSize = 16, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center };
     private readonly Label _trainingSummary = new() { FontSize = 16, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center };
@@ -27,6 +28,7 @@ public sealed class DashboardPage : ContentPage
         Title = "Dashboard";
         BackgroundColor = Color.FromArgb("#F8FBFF");
         _startWorkout.Command = viewModel.StartWorkoutCommand;
+        _resumeWorkout.Command = viewModel.ResumeWorkoutCommand;
         _logActivity.Command = viewModel.LogActivityCommand;
 
         var content = new Grid
@@ -82,7 +84,7 @@ public sealed class DashboardPage : ContentPage
         };
         var content = new Grid
         {
-            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(62) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) },
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(116) },
             ColumnSpacing = 12,
             RowSpacing = 14
@@ -100,8 +102,9 @@ public sealed class DashboardPage : ContentPage
         };
         content.Add(dumbbell, 1, 0);
         Grid.SetRowSpan(dumbbell, 2);
-        content.Add(_startWorkout, 0, 1);
-        Grid.SetColumnSpan(_startWorkout, 2);
+        var actions = new VerticalStackLayout { Spacing = 8, Children = { _resumeWorkout, _startWorkout } };
+        content.Add(actions, 0, 1);
+        Grid.SetColumnSpan(actions, 2);
         return new Border
         {
             BackgroundColor = PaleTeal,
@@ -249,6 +252,8 @@ public sealed class DashboardPage : ContentPage
         _recent.Text = state.IsEmptyState ? "No recent records" : string.Join(Environment.NewLine, state.RecentItems.Select(x => $"{x.Title} · {x.Detail}"));
         _trainingSummary.Text = state.IsEmptyState ? "Log your workouts to see them here." : state.TrainingSummary;
         _startWorkout.IsVisible = state.ShowGymQuickStart;
+        _resumeWorkout.IsVisible = state.ActiveWorkout is not null;
+        _resumeWorkout.Text = state.ActiveWorkout is { } active ? $"↻  Resume {active.Name}" : "↻  Resume workout";
         _logActivity.IsVisible = state.ShowActivityQuickStart || state.IsEmptyState;
         _history.Children.Clear();
     }
