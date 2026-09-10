@@ -17,6 +17,10 @@ public sealed class GymTrackerBackupValidator
         }
 
         ValidateRequiredProperties(errors, json);
+        if (document.Exercises is null || document.WorkoutTemplates is null || document.TemplateExercises is null ||
+            document.WorkoutSessions is null || document.ActivityRecords is null || document.Recommendations is null ||
+            document.UserSettings is null || document.BackupMetadata is null)
+            return new() { Errors = errors };
         if (document.SchemaVersion != 1) Add(errors, "schemaVersion", "Unsupported schema version.");
         if (document.ExportedAtUtc.Kind != DateTimeKind.Utc) Add(errors, "exportedAtUtc", "Date must be UTC.");
         if (string.IsNullOrWhiteSpace(document.Application)) Add(errors, "application", "Application is required.");
