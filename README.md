@@ -45,3 +45,16 @@ Persistence tests run offline against isolated temporary SQLite files:
 ```powershell
 dotnet test tests/GymTrackerMobile.Persistence.Tests/GymTrackerMobile.Persistence.Tests.csproj
 ```
+
+## Android UI automation
+
+The Appium journey suite is in `tests/GymTrackerMobile.UI.AutomationTests`. It builds and discovers on any machine, but skips device tests unless an Android APK and Appium endpoint are configured. With an API 35 emulator running and Appium 2 plus the UiAutomator2 driver installed:
+
+```powershell
+$env:APPIUM_SERVER_URL = "http://127.0.0.1:4723/wd/hub"
+$env:ANDROID_DEVICE_NAME = "GymTrackerApi35"
+$env:GYMTRACKER_APK_PATH = "$(Resolve-Path 'src/GymTrackerMobile/bin/Debug/net10.0-android/*.apk')"
+dotnet test tests/GymTrackerMobile.UI.AutomationTests/GymTrackerMobile.UI.AutomationTests.csproj
+```
+
+The Android workflow runs on pull requests when the repository variable `ANDROID_UI_TESTS` is set to `true`, and can always be started manually. Each debug launch uses the `gymtracker.uiTestMode` intent extra to reset and reseed local test data without internet access.
