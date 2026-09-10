@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
+using GymTrackerMobile.Persistence.Backup;
 
 namespace GymTrackerMobile.UI;
 
@@ -196,13 +197,57 @@ public sealed class HistoryPage : ContentPage
 public sealed class BackupSettingsPage : DestinationPage
 {
     private readonly DeveloperResetViewModel _viewModel;
+    private readonly BackupSettingsViewModel _backupViewModel;
 
-    public BackupSettingsPage(DeveloperResetViewModel viewModel) : base(DestinationPageContent.BackupSettings)
+    public BackupSettingsPage(DeveloperResetViewModel viewModel, BackupSettingsViewModel backupViewModel) : base(DestinationPageContent.BackupSettings)
     {
         _viewModel = viewModel;
+        _backupViewModel = backupViewModel;
+        AddBackupTools();
 #if DEBUG
         AddDeveloperTools();
 #endif
+    }
+
+    private void AddBackupTools()
+    {
+        var exportButton = new Button { Text = "Export backup", BackgroundColor = Color.FromArgb("#169F9A"), TextColor = Colors.White, CornerRadius = 8 };
+        exportButton.Clicked += async (_, _) =>
+        {
+            exportButton.IsEnabled = false;
+            await _backupViewModel.ExportAsync();
+            exportButton.IsEnabled = true;
+            if (_backupViewModel.StatusMessage is not null) await DisplayAlertAsync("Backup exported", _backupViewModel.StatusMessage, "OK");
+            else if (_backupViewModel.ErrorMessage is not null) await DisplayAlertAsync("Export failed", _backupViewModel.ErrorMessage, "OK");
+        };
+
+        var replaceButton = new Button { Text = "Restore backup", BackgroundColor = Color.FromArgb("#169F9A"), TextColor = Colors.White, CornerRadius = 8 };
+        replaceButton.Clicked += async (_, _) => await ImportAsync(replaceButton, BackupImportMode.Replace);
+        var mergeButton = new Button { Text = "Merge backup", BackgroundColor = Colors.White, TextColor = Color.FromArgb("#169F9A"), BorderColor = Color.FromArgb("#169F9A"), BorderWidth = 1, CornerRadius = 8 };
+        mergeButton.Clicked += async (_, _) => await ImportAsync(mergeButton, BackupImportMode.Merge);
+
+        AddAdditionalContent(new VerticalStackLayout
+        {
+            Spacing = 8,
+            Children =
+            {
+                new Label { Text = "Backup", FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#169F9A") },
+                new Label { Text = "Export your local data or restore it from a validated JSON backup.", TextColor = Color.FromArgb("#687A95") },
+                exportButton, replaceButton, mergeButton
+            }
+        });
+    }
+
+    private async Task ImportAsync(Button button, BackupImportMode mode)
+    {
+        button.IsEnabled = false;
+        await _backupViewModel.ImportAsync(mode, () => DisplayAlertAsync(
+            mode == BackupImportMode.Replace ? "Restore backup?" : "Merge backup?",
+            mode == BackupImportMode.Replace ? "This replaces all current local data. A recovery copy will be created first." : "This adds backup records and updates matching IDs.",
+            mode == BackupImportMode.Replace ? "Restore" : "Merge", "Cancel"));
+        button.IsEnabled = true;
+        if (_backupViewModel.StatusMessage is not null) await DisplayAlertAsync("Backup complete", _backupViewModel.StatusMessage, "OK");
+        else if (_backupViewModel.ErrorMessage is not null) await DisplayAlertAsync("Backup failed", _backupViewModel.ErrorMessage, "OK");
     }
 
 #if DEBUG
