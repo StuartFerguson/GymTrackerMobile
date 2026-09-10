@@ -44,6 +44,28 @@ public sealed class WorkoutSummaryViewModelTests
         Assert.Contains("incomplete", viewModel.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task Workout_with_no_logged_sets_reports_zero_progress()
+    {
+        var session = CreateSession();
+        foreach (var set in session.Exercises.SelectMany(x => x.Sets))
+        {
+            set.Status = SetStatus.Planned;
+            set.WeightKilograms = null;
+            set.Repetitions = null;
+        }
+
+        var viewModel = new WorkoutSummaryViewModel(new RecordingWorkoutRepository(session));
+
+        await viewModel.LoadAsync(session.Id);
+
+        Assert.False(viewModel.State.IsComplete);
+        Assert.Equal(0, viewModel.State.CompletedSetCount);
+        Assert.Equal(15, viewModel.State.PlannedSetCount);
+        Assert.Equal(0, viewModel.State.TotalVolumeKilograms);
+        Assert.All(viewModel.State.ExerciseList, exercise => Assert.Equal(0, exercise.CompletedSetCount));
+    }
+
     private static WorkoutSession CreateSession()
     {
         var exercises = new[]
