@@ -11,5 +11,5 @@ public static class DestinationPageContent
         new("Exercise progress", "Log a workout to start tracking exercise progress.");
 
     public static DestinationPageDescriptor BackupSettings { get; } =
-        new("Backup & Settings", "Backup and app settings will be available here.");
+        new("Backup & Settings", "Keep your training data safe and manage app preferences.");
 }
