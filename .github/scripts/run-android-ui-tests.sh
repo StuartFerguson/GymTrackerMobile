@@ -8,6 +8,8 @@ if [[ -z "$APK_PATH" ]]; then
   exit 1
 fi
 
+adb install -r -g "$GITHUB_WORKSPACE/$APK_PATH"
+
 appium --base-path /wd/hub > test-results/appium.log 2>&1 &
 APPIUM_PID=$!
 trap 'kill "$APPIUM_PID" 2>/dev/null || true' EXIT
