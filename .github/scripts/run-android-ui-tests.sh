@@ -8,6 +8,10 @@ if [[ -z "$APK_PATH" ]]; then
   exit 1
 fi
 
+adb kill-server
+adb start-server
+adb devices
+
 adb install -r -g "$GITHUB_WORKSPACE/$APK_PATH"
 
 adb logcat -c
