@@ -10,9 +10,13 @@ fi
 
 adb install -r -g "$GITHUB_WORKSPACE/$APK_PATH"
 
+adb logcat -c
+adb logcat -v threadtime > test-results/logcat.log 2>&1 &
+LOGCAT_PID=$!
+
 appium --base-path /wd/hub > test-results/appium.log 2>&1 &
 APPIUM_PID=$!
-trap 'kill "$APPIUM_PID" 2>/dev/null || true' EXIT
+trap 'kill "$APPIUM_PID" "$LOGCAT_PID" 2>/dev/null || true' EXIT
 
 sleep 5
 APPIUM_SERVER_URL=http://127.0.0.1:4723/wd/hub \
