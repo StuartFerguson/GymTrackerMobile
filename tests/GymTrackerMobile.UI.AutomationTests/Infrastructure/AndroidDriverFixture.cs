@@ -30,6 +30,7 @@ public sealed class AndroidDriverFixture : IAsyncLifetime
         options.AddAdditionalAppiumOption("appium:skipDeviceInitialization", true);
         options.AddAdditionalAppiumOption("appium:optionalIntentArguments", "-e gymtracker.uiTestMode true");
         options.AddAdditionalAppiumOption("appium:appWaitForLaunch", false);
+        options.AddAdditionalAppiumOption("appium:appWaitDuration", 120_000);
         options.AddAdditionalAppiumOption("appium:adbExecTimeout", 120_000);
         options.AddAdditionalAppiumOption("appium:androidInstallTimeout", 120_000);
         options.AddAdditionalAppiumOption("appium:uiautomator2ServerInstallTimeout", 120_000);
