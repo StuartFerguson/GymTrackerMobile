@@ -38,7 +38,7 @@ public abstract class AppPage(AndroidDriver driver)
         try
         {
             var size = Driver.Manage().Window.Size;
-            ((IJavaScriptExecutor)Driver).ExecuteScript("mobile: swipeGesture", new Dictionary<string, object>
+            ((IJavaScriptExecutor)Driver).ExecuteScript("mobile: scrollGesture", new Dictionary<string, object>
             {
                 ["left"] = 0,
                 ["top"] = Math.Min(200, size.Height / 4),
