@@ -37,7 +37,8 @@ public abstract class AppPage(AndroidDriver driver)
     {
         try
         {
-            var scrollView = Driver.FindElements(MobileBy.ClassName("android.widget.ScrollView")).FirstOrDefault();
+            var scrollView = Driver.FindElements(MobileBy.ClassName("android.widget.ScrollView"))
+                .FirstOrDefault(x => string.Equals(x.GetAttribute("scrollable"), "true", StringComparison.OrdinalIgnoreCase));
             if (scrollView is null) return;
 
             ((IJavaScriptExecutor)Driver).ExecuteScript("mobile: scrollGesture", new Dictionary<string, object>
