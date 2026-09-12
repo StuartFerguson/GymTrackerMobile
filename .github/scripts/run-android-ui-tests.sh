@@ -14,7 +14,7 @@ adb logcat -c
 adb logcat -v threadtime > test-results/logcat.log 2>&1 &
 LOGCAT_PID=$!
 
-appium --base-path /wd/hub > test-results/appium.log 2>&1 &
+appium --base-path /wd/hub --allow-insecure=adb_shell > test-results/appium.log 2>&1 &
 APPIUM_PID=$!
 trap 'kill "$APPIUM_PID" "$LOGCAT_PID" 2>/dev/null || true' EXIT
 
