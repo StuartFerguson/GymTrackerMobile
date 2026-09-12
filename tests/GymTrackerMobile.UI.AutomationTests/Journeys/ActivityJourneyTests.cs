@@ -13,6 +13,7 @@ public sealed class ActivityJourneyTests
     [AndroidFact]
     public void Logs_walking_and_finds_it_in_history()
     {
+        _fixture.ResetApplication();
         var history = new DashboardPage(_fixture.Driver!).OpenActivityLog()
             .ChooseWalking()
             .EnterWalkingDetails("25", "2.5")

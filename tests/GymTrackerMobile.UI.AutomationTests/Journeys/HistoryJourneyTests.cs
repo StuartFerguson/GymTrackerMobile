@@ -13,6 +13,7 @@ public sealed class HistoryJourneyTests
     [AndroidFact]
     public void Opens_exercise_progress_from_stored_workout_history()
     {
+        _fixture.ResetApplication();
         var progress = new DashboardPage(_fixture.Driver!).OpenHistory().OpenFirstWorkout().OpenProgress();
 
         Assert.False(string.IsNullOrWhiteSpace(progress.ExerciseName()));

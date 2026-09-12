@@ -13,6 +13,7 @@ public sealed class WorkoutJourneyTests
     [AndroidFact]
     public void Starts_push_records_a_set_and_shows_the_summary()
     {
+        _fixture.ResetApplication();
         var summary = new DashboardPage(_fixture.Driver!).OpenStartWorkout().ChoosePush()
             .EnterSet(1, "40", "8")
             .Complete();

@@ -16,6 +16,7 @@ public sealed class AppLaunchTests
     [AndroidFact]
     public void App_launches_to_the_start_workout_flow()
     {
+        _fixture.ResetApplication();
         Assert.NotNull(_fixture.Driver);
         var page = new AppPageProbe(_fixture.Driver!);
         page.WaitForStartWorkout();

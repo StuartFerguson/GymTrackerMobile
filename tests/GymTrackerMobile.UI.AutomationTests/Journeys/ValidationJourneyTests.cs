@@ -13,6 +13,7 @@ public sealed class ValidationJourneyTests
     [AndroidFact]
     public void Keeps_workout_input_after_invalid_submission()
     {
+        _fixture.ResetApplication();
         var workout = new DashboardPage(_fixture.Driver!).OpenStartWorkout().ChoosePush().EnterSet(1, "-5", "");
 
         Assert.Equal("-5", workout.Weight(1));
