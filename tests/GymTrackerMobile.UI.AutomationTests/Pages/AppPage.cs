@@ -24,6 +24,7 @@ public abstract class AppPage(AndroidDriver driver)
                 lastError = error;
             }
 
+            ScrollDown();
             Thread.Sleep(250);
         }
 
@@ -31,4 +32,25 @@ public abstract class AppPage(AndroidDriver driver)
     }
 
     protected void Tap(string automationId) => Find(automationId).Click();
+
+    private void ScrollDown()
+    {
+        try
+        {
+            var size = Driver.Manage().Window.Size;
+            ((IJavaScriptExecutor)Driver).ExecuteScript("mobile: scrollGesture", new Dictionary<string, object>
+            {
+                ["left"] = 0,
+                ["top"] = Math.Min(200, size.Height / 4),
+                ["width"] = size.Width,
+                ["height"] = Math.Max(1, size.Height - 300),
+                ["direction"] = "down",
+                ["percent"] = 0.6
+            });
+        }
+        catch (WebDriverException)
+        {
+            // Keep polling if the current driver cannot perform a scroll gesture.
+        }
+    }
 }
