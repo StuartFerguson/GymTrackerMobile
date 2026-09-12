@@ -23,6 +23,6 @@ public sealed class AppLaunchTests
 
     private sealed class AppPageProbe(OpenQA.Selenium.Appium.Android.AndroidDriver driver) : AppPage(driver)
     {
-        public void WaitForStartWorkout() => Find("start-workout");
+        public void WaitForStartWorkout() => Find("dashboard-start-workout");
     }
 }

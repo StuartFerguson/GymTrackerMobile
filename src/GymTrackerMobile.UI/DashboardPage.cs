@@ -200,29 +200,20 @@ public sealed class DashboardPage : ContentPage
 
     private static View CreateActionTile(string image, string title, System.Windows.Input.ICommand? command = null, string? automationId = null)
     {
-        var tile = new Border
+        return new Button
         {
             AutomationId = automationId,
+            Command = command,
+            ImageSource = image,
+            Text = title,
             BackgroundColor = PaleBlue,
-            StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 18 },
+            BorderWidth = 0,
+            CornerRadius = 18,
+            FontSize = 14,
+            TextColor = Ink,
             Padding = new Thickness(4, 10),
             HeightRequest = 92,
-            Content = new VerticalStackLayout
-            {
-                Spacing = 6,
-                HorizontalOptions = LayoutOptions.Center,
-                Children = { new Image { Source = image, WidthRequest = 34, HeightRequest = 34 }, new Label { Text = title, FontSize = 14, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center } }
-            }
         };
-        if (command is not null)
-        {
-            var tap = new TapGestureRecognizer();
-            tap.Tapped += (_, _) => command.Execute(null);
-            tile.GestureRecognizers.Add(tap);
-        }
-
-        return tile;
     }
 
     private static View CreateNavigationItem(string image, string title, bool selected, System.Windows.Input.ICommand? command = null)
