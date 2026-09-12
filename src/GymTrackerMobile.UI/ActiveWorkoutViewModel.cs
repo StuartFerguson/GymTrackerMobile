@@ -141,10 +141,15 @@ public sealed class ActiveWorkoutViewModel(IWorkoutRepository workouts)
 
     public Task AcceptRecommendationAsync()
     {
-        if (State.CurrentExercise is not { } exercise || State.Recommendation?.ProposedWeightKilograms is not double weight) return Task.CompletedTask;
-        var first = exercise.Sets.FirstOrDefault();
-        if (first is null) return Task.CompletedTask;
-        ReplaceCurrentExercise(exercise with { Sets = exercise.Sets.Select(x => x.SetNumber == first.SetNumber ? x with { WeightKilograms = weight } : x).ToList() });
+        if (State.CurrentExercise is not { } exercise || State.Recommendation is not { } recommendation) return Task.CompletedTask;
+        if (recommendation.ProposedWeightKilograms is double weight)
+        {
+            var first = exercise.Sets.FirstOrDefault();
+            if (first is not null)
+            {
+                ReplaceCurrentExercise(exercise with { Sets = exercise.Sets.Select(x => x.SetNumber == first.SetNumber ? x with { WeightKilograms = weight } : x).ToList() });
+            }
+        }
         State = State with { Recommendation = State.Recommendation with { Outcome = RecommendationOutcomeType.Accepted }, ErrorMessage = null };
         return Task.CompletedTask;
     }

@@ -48,9 +48,10 @@ public sealed class LogActivityPage : ContentPage
         _poolLengths.TextChanged += (_, _) => { _viewModel.PoolLengthsText = _poolLengths.Text ?? string.Empty; Render(); };
         _notes.TextChanged += (_, _) => _viewModel.NotesText = _notes.Text ?? string.Empty;
         _save.Clicked += async (_, _) => await SaveAsync();
-        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
+        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(64), new(76) } };
         content.Add(BuildBody(), 0, 0);
-        content.Add(BuildBottomNavigation(), 0, 1);
+        content.Add(_save, 0, 1);
+        content.Add(BuildBottomNavigation(), 0, 2);
         Content = content;
     }
 
@@ -122,8 +123,7 @@ public sealed class LogActivityPage : ContentPage
                 metrics,
                 _swimmingFields,
                 FieldLabel("Notes (optional)"), BuildOutlinedInput(_notes),
-                _errors, _status,
-                _save
+                _errors, _status
             }
         };
         return new Border { BackgroundColor = Colors.White, StrokeThickness = 0, Padding = new Thickness(14, 18, 14, 16), StrokeShape = new RoundRectangle { CornerRadius = 24 }, Content = content };
