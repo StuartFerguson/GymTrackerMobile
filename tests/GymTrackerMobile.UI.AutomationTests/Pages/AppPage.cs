@@ -37,13 +37,12 @@ public abstract class AppPage(AndroidDriver driver)
     {
         try
         {
-            var size = Driver.Manage().Window.Size;
+            var scrollView = Driver.FindElements(MobileBy.ClassName("android.widget.ScrollView")).FirstOrDefault();
+            if (scrollView is null) return;
+
             ((IJavaScriptExecutor)Driver).ExecuteScript("mobile: scrollGesture", new Dictionary<string, object>
             {
-                ["left"] = 0,
-                ["top"] = Math.Min(200, size.Height / 4),
-                ["width"] = size.Width,
-                ["height"] = Math.Max(1, size.Height - 300),
+                ["elementId"] = scrollView.Id,
                 ["direction"] = "up",
                 ["percent"] = 0.6
             });
