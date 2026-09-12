@@ -79,7 +79,7 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
             VerticalOptions = LayoutOptions.Center,
             Children =
             {
-                new Label { AutomationId = UiAutomationIds.WorkoutSummaryName, Text = state.WorkoutName, FontSize = 24, FontAttributes = FontAttributes.Bold, TextColor = Ink, LineBreakMode = LineBreakMode.NoWrap },
+                AutomationText(UiAutomationIds.WorkoutSummaryName, state.WorkoutName, 24, FontAttributes.Bold, Ink),
                 new Label { Text = $"✓  {(state.IsComplete ? "Completed" : "Partially logged")}  ·  {state.CompletedAtUtc?.ToLocalTime():dd MMM yyyy}", FontSize = 14, TextColor = state.IsComplete ? Teal : Color.FromArgb("#B54708"), LineBreakMode = LineBreakMode.NoWrap },
                 new Label { Text = state.MuscleGroups, FontSize = 16, TextColor = Muted }
             }
@@ -100,7 +100,13 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
         return grid;
     }
 
-    private static View Metric(string icon, string value, string label, string? automationId = null) => new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, Padding = new Thickness(5, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Center, Children = { new Label { Text = icon, FontSize = 26, TextColor = Color.FromArgb("#52667F"), HorizontalTextAlignment = TextAlignment.Center }, new Label { AutomationId = automationId, Text = value, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center }, new Label { Text = label, FontSize = 12, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center } } } };
+    private static View Metric(string icon, string value, string label, string? automationId = null) => new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, Padding = new Thickness(5, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Center, Children = { new Label { Text = icon, FontSize = 26, TextColor = Color.FromArgb("#52667F"), HorizontalTextAlignment = TextAlignment.Center }, automationId is null ? new Label { Text = value, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center } : AutomationText(automationId, value, 16, FontAttributes.Bold, Ink, TextAlignment.Center), new Label { Text = label, FontSize = 12, TextColor = Muted, HorizontalTextAlignment = TextAlignment.Center } } } };
+
+    private static Button AutomationText(string automationId, string text, double fontSize, FontAttributes attributes, Color color, TextAlignment alignment = TextAlignment.Start) => new()
+    {
+        AutomationId = automationId, Text = text, FontSize = fontSize, FontAttributes = attributes, TextColor = color,
+        BackgroundColor = Colors.Transparent, BorderWidth = 0, Padding = 0, HorizontalOptions = alignment == TextAlignment.Center ? LayoutOptions.Center : LayoutOptions.Start,
+    };
 
     private static View BuildStatus(WorkoutSummaryState state)
     {
