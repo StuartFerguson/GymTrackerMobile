@@ -49,7 +49,14 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
     {
         var finish = new Button { Text = "Finish", FontSize = 14, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 16, Padding = new Thickness(12, 4) };
         finish.AutomationId = UiAutomationIds.ActiveComplete;
-        finish.Clicked += async (_, _) => { await _viewModel.CompleteAsync(); await Shell.Current.GoToAsync(".."); };
+        finish.Clicked += async (_, _) =>
+        {
+            await _viewModel.CompleteAsync();
+            if (_sessionId is Guid sessionId)
+            {
+                await Shell.Current.GoToAsync($"{NavigationRoutes.WorkoutSummary}?sessionId={sessionId}");
+            }
+        };
         var abandon = new Button { Text = "Abandon", FontSize = 14, BackgroundColor = Colors.White, TextColor = Color.FromArgb("#B42318"), BorderColor = Color.FromArgb("#F0B4AE"), BorderWidth = 1, CornerRadius = 16, Padding = new Thickness(10, 4) };
         abandon.Clicked += async (_, _) =>
         {
