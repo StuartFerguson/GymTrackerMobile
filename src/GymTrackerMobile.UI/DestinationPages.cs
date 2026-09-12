@@ -163,13 +163,22 @@ public sealed class HistoryPage : ContentPage
         Microsoft.Maui.Controls.Grid.SetColumn(details, 1);
         Microsoft.Maui.Controls.Grid.SetColumn(chevron, 2);
 
-        var card = new Border { AutomationId = UiAutomationIds.HistoryItem(index), BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
+        var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
+        var open = new Button
+        {
+            AutomationId = UiAutomationIds.HistoryItem(index),
+            BackgroundColor = Colors.Transparent,
+            BorderWidth = 0,
+            CornerRadius = 18,
+            Text = string.Empty,
+            Padding = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        open.Clicked += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
             ? $"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}"
             : $"{NavigationRoutes.ActivitySummary}?activityId={item.Id}");
-        card.GestureRecognizers.Add(tap);
-        return card;
+        return new Grid { Children = { card, open } };
     }
 
     private static string ActivityIcon(string activityName) => activityName switch

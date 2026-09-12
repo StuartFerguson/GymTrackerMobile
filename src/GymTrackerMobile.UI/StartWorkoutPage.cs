@@ -106,13 +106,23 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         cardGrid.Add(new Image { Source = "start_chevron.svg", WidthRequest = 22, HeightRequest = 22, HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.Center }, 0, 0);
         cardGrid.Add(new Label { Text = template.Name, FontSize = 21, FontAttributes = FontAttributes.Bold, TextColor = Ink }, 0, 1);
         cardGrid.Add(new Label { Text = template.Description, FontSize = 15, TextColor = Muted, LineBreakMode = LineBreakMode.TailTruncation }, 0, 2);
-        var card = new Border { AutomationId = template.Name.Equals("Push", StringComparison.OrdinalIgnoreCase) ? UiAutomationIds.StartTemplatePush : $"start-template-{template.Name.ToLowerInvariant().Replace(' ', '-')}", BackgroundColor = selected ? Color.FromArgb("#F0FBFA") : Colors.White, Stroke = selected ? Teal : Color.FromArgb("#E2EBF5"), StrokeThickness = selected ? 2 : 1, Padding = new Thickness(14, 16), StrokeShape = new RoundRectangle { CornerRadius = 20 }, Content = cardGrid };
-        Grid.SetColumn(card, index % 2);
-        Grid.SetRow(card, index / 2);
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) => { _viewModel.SelectTemplate(template.Id); Render(); };
-        card.GestureRecognizers.Add(tap);
-        return card;
+        var card = new Border { BackgroundColor = selected ? Color.FromArgb("#F0FBFA") : Colors.White, Stroke = selected ? Teal : Color.FromArgb("#E2EBF5"), StrokeThickness = selected ? 2 : 1, Padding = new Thickness(14, 16), StrokeShape = new RoundRectangle { CornerRadius = 20 }, Content = cardGrid };
+        var select = new Button
+        {
+            AutomationId = template.Name.Equals("Push", StringComparison.OrdinalIgnoreCase) ? UiAutomationIds.StartTemplatePush : $"start-template-{template.Name.ToLowerInvariant().Replace(' ', '-')}",
+            BackgroundColor = Colors.Transparent,
+            BorderWidth = 0,
+            CornerRadius = 20,
+            Text = string.Empty,
+            Padding = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        select.Clicked += (_, _) => { _viewModel.SelectTemplate(template.Id); Render(); };
+        var container = new Grid { Children = { card, select } };
+        Grid.SetColumn(container, index % 2);
+        Grid.SetRow(container, index / 2);
+        return container;
     }
 
     private static View BuildConsistencyBanner() => new Border

@@ -126,11 +126,20 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
         grid.Add(new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = new Image { Source = exercise.ImageSource, Aspect = Aspect.AspectFit } }, 0, 0);
         grid.Add(details, 1, 0);
         grid.Add(volume, 2, 0);
-        var card = new Border { AutomationId = UiAutomationIds.HistoryProgress(index), BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = grid };
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(NavigationRoutes.ExerciseProgress);
-        card.GestureRecognizers.Add(tap);
-        return card;
+        var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 12), StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = grid };
+        var open = new Button
+        {
+            AutomationId = UiAutomationIds.HistoryProgress(index),
+            BackgroundColor = Colors.Transparent,
+            BorderWidth = 0,
+            CornerRadius = 16,
+            Text = string.Empty,
+            Padding = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        open.Clicked += async (_, _) => await Shell.Current.GoToAsync(NavigationRoutes.ExerciseProgress);
+        return new Grid { Children = { card, open } };
     }
 
     private static View BuildNotes(WorkoutSummaryState state)
