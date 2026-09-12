@@ -39,7 +39,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (Guid.TryParse(query["templateId"]?.ToString(), out var templateId)) _pendingTemplateId = templateId;
+        if (query.TryGetValue("templateId", out var value) && Guid.TryParse(value?.ToString(), out var templateId))
+        {
+            _pendingTemplateId = templateId;
+        }
     }
 
     private View BuildBody() => new ScrollView
