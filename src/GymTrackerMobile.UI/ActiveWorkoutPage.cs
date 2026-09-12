@@ -42,7 +42,7 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(52) } };
         heading.Add(new VerticalStackLayout { Spacing = 2, Children = { new Label { Text = exercise.Name, FontSize = 29, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = exercise.MuscleAndMode, FontSize = 18, TextColor = Muted } } }, 0, 0);
         heading.Add(new Label { Text = $"{_viewModel.State.ExerciseNumber} of {_viewModel.State.ExerciseList.Count}", FontSize = 17, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
-        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), AutomationText("active-error", _viewModel.State.ErrorMessage, Color.FromArgb("#B42318")), BuildRecommendation(), BuildNavigation() } };
+        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, AutomationText("active-error", _viewModel.State.ErrorMessage, Color.FromArgb("#B42318")), BuildRecommendation(), BuildExerciseSummary(exercise), BuildSets(exercise), BuildNavigation() } };
     }
 
     private static Button AutomationText(string automationId, string? text, Color color) => new()
