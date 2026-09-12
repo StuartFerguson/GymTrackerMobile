@@ -170,7 +170,8 @@ public sealed class HistoryPage : ContentPage
             BackgroundColor = Colors.Transparent,
             BorderWidth = 0,
             CornerRadius = 18,
-            Text = string.Empty,
+            Text = item.Name,
+            TextColor = Colors.Transparent,
             Padding = 0,
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill

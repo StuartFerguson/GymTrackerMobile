@@ -113,7 +113,8 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
             BackgroundColor = Colors.Transparent,
             BorderWidth = 0,
             CornerRadius = 20,
-            Text = string.Empty,
+            Text = template.Name,
+            TextColor = Colors.Transparent,
             Padding = 0,
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill

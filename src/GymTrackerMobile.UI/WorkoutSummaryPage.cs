@@ -133,7 +133,8 @@ public sealed class WorkoutSummaryPage : ContentPage, IQueryAttributable
             BackgroundColor = Colors.Transparent,
             BorderWidth = 0,
             CornerRadius = 16,
-            Text = string.Empty,
+            Text = exercise.Name,
+            TextColor = Colors.Transparent,
             Padding = 0,
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
