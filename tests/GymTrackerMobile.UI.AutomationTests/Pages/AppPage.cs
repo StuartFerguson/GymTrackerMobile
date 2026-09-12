@@ -37,6 +37,8 @@ public abstract class AppPage(AndroidDriver driver)
     {
         try
         {
+            try { Driver.HideKeyboard(); } catch (WebDriverException) { }
+
             var scrollView = Driver.FindElements(MobileBy.ClassName("android.widget.ScrollView"))
                 .FirstOrDefault(x => string.Equals(x.GetAttribute("scrollable"), "true", StringComparison.OrdinalIgnoreCase));
             if (scrollView is null) return;
