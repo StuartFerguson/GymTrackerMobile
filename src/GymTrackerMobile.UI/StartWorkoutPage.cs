@@ -154,7 +154,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         _templates.RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) };
         _templates.ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) };
         for (var index = 0; index < _viewModel.State.Templates.Count; index++) _templates.Children.Add(BuildTemplateCard(_viewModel.State.Templates[index], index));
-        _start.IsEnabled = _viewModel.State.CanStart;
+        // Keep the native control in Android's accessibility tree even before a template is selected.
+        // StartWorkoutViewModel.StartWorkoutAsync guards the command when starting is not allowed.
+        _start.IsEnabled = true;
+        _start.Opacity = _viewModel.State.CanStart ? 1 : 0.6;
         _resume.IsVisible = _viewModel.State.CanResume;
         _resume.Text = _viewModel.State.HasActiveWorkout ? $"↻  Resume {_viewModel.State.ActiveWorkoutName}" : "↻  Resume workout";
         _start.Text = _viewModel.State.IsStarting ? "Starting…" : _viewModel.State.SelectedTemplateId is null ? "Select a workout" : $"▶  Start {_viewModel.State.SelectedTemplateName}";
