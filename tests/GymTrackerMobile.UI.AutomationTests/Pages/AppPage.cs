@@ -16,7 +16,7 @@ public abstract class AppPage(AndroidDriver driver)
         {
             try
             {
-                var element = Driver.FindElement(MobileBy.AccessibilityId(automationId));
+                var element = Driver.FindElement(MobileBy.Id(automationId));
                 if (element.Displayed) return element;
             }
             catch (Exception error) when (error is WebDriverException or InvalidOperationException)
