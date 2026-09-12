@@ -22,9 +22,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         _start.Command = viewModel.StartCommand;
         _resume.Clicked += async (_, _) => await _viewModel.ResumeWorkoutAsync();
 
-        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
+        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76), new(76) } };
         content.Add(BuildBody(), 0, 0);
-        content.Add(BuildBottomNavigation(), 0, 1);
+        content.Add(_start, 0, 1);
+        content.Add(BuildBottomNavigation(), 0, 2);
         Content = content;
     }
 
@@ -50,7 +51,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         Content = new VerticalStackLayout
         {
             Padding = new Thickness(20, 22, 20, 28), Spacing = 18,
-            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _resume, _templates, _start, _error, BuildConsistencyBanner() }
+            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _resume, _templates, _error, BuildConsistencyBanner() }
         }
     };
 
