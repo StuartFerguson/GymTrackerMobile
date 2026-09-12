@@ -1,5 +1,6 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
+using OpenQA.Selenium;
 
 namespace GymTrackerMobile.UI.AutomationTests.Infrastructure;
 
@@ -68,6 +69,11 @@ public sealed class AndroidDriverFixture : IAsyncLifetime
     public void ResetApplication()
     {
         Driver?.TerminateApp("com.companyname.gymtrackermobile");
+        ((IJavaScriptExecutor)Driver!).ExecuteScript("mobile: shell", new Dictionary<string, object>
+        {
+            ["command"] = "pm",
+            ["args"] = new[] { "clear", "com.companyname.gymtrackermobile" }
+        });
         Driver?.ActivateApp("com.companyname.gymtrackermobile");
     }
 }

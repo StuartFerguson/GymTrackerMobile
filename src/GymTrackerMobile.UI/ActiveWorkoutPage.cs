@@ -42,8 +42,19 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(52) } };
         heading.Add(new VerticalStackLayout { Spacing = 2, Children = { new Label { Text = exercise.Name, FontSize = 29, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = exercise.MuscleAndMode, FontSize = 18, TextColor = Muted } } }, 0, 0);
         heading.Add(new Label { Text = $"{_viewModel.State.ExerciseNumber} of {_viewModel.State.ExerciseList.Count}", FontSize = 17, TextColor = Muted, HorizontalTextAlignment = TextAlignment.End, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
-        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), new Label { AutomationId = "active-error", Text = _viewModel.State.ErrorMessage, TextColor = Color.FromArgb("#B42318"), IsVisible = _viewModel.State.ErrorMessage is not null }, BuildRecommendation(), BuildNavigation() } };
+        return new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 24), Spacing = 18, Children = { BuildHeader(), heading, BuildExerciseSummary(exercise), BuildSets(exercise), AutomationText("active-error", _viewModel.State.ErrorMessage, Color.FromArgb("#B42318")), BuildRecommendation(), BuildNavigation() } };
     }
+
+    private static Button AutomationText(string automationId, string? text, Color color) => new()
+    {
+        AutomationId = automationId,
+        Text = text,
+        TextColor = color,
+        BackgroundColor = Colors.Transparent,
+        BorderWidth = 0,
+        Padding = 0,
+        IsVisible = text is not null
+    };
 
     private View BuildHeader()
     {
