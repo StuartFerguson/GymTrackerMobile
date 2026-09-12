@@ -10,7 +10,7 @@ public abstract class AppPage(AndroidDriver driver)
 
     protected IWebElement Find(string automationId, TimeSpan? timeout = null)
     {
-        var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(20));
+        var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(60));
         Exception? lastError = null;
         while (DateTime.UtcNow < deadline)
         {

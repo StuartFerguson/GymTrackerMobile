@@ -21,6 +21,7 @@ trap 'kill "$APPIUM_PID" "$LOGCAT_PID" 2>/dev/null || true' EXIT
 sleep 5
 APPIUM_SERVER_URL=http://127.0.0.1:4723/wd/hub \
 ANDROID_DEVICE_NAME=GymTrackerApi35 \
+ANDROID_UI_FAILURE_DIR="$GITHUB_WORKSPACE/test-results" \
 GYMTRACKER_APK_PATH="$GITHUB_WORKSPACE/$APK_PATH" \
 dotnet test tests/GymTrackerMobile.UI.AutomationTests/GymTrackerMobile.UI.AutomationTests.csproj \
   --configuration Release \
