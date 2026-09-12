@@ -53,6 +53,8 @@ public sealed class ActiveWorkoutPage : ContentPage, IQueryAttributable
         BackgroundColor = Colors.Transparent,
         BorderWidth = 0,
         Padding = 0,
+        HeightRequest = 40,
+        HorizontalOptions = LayoutOptions.Fill,
         IsVisible = text is not null
     };
 
