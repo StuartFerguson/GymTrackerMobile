@@ -28,6 +28,7 @@ public sealed class DashboardPage : ContentPage
         Title = "Dashboard";
         BackgroundColor = Color.FromArgb("#F8FBFF");
         _startWorkout.Command = viewModel.StartWorkoutCommand;
+        _startWorkout.AutomationId = UiAutomationIds.DashboardStartWorkout;
         _resumeWorkout.Command = viewModel.ResumeWorkoutCommand;
         _logActivity.Command = viewModel.LogActivityCommand;
 
@@ -122,9 +123,9 @@ public sealed class DashboardPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) },
             ColumnSpacing = 10
         };
-        grid.Add(CreateActionTile("dashboard_add.svg", "Log activity", _viewModel.LogActivityCommand), 0, 0);
+        grid.Add(CreateActionTile("dashboard_add.svg", "Log activity", _viewModel.LogActivityCommand, UiAutomationIds.DashboardLogActivity), 0, 0);
         grid.Add(CreateActionTile("dashboard_plan.svg", "Plan", _viewModel.WeeklyPlanCommand), 1, 0);
-        grid.Add(CreateActionTile("dashboard_history.svg", "History", _viewModel.HistoryCommand), 2, 0);
+        grid.Add(CreateActionTile("dashboard_history.svg", "History", _viewModel.HistoryCommand, UiAutomationIds.DashboardHistory), 2, 0);
         grid.Add(CreateActionTile("dashboard_more.svg", "More", _viewModel.SettingsCommand), 3, 0);
         return grid;
     }
@@ -197,30 +198,22 @@ public sealed class DashboardPage : ContentPage
         return grid;
     }
 
-    private static View CreateActionTile(string image, string title, System.Windows.Input.ICommand? command = null)
+    private static View CreateActionTile(string image, string title, System.Windows.Input.ICommand? command = null, string? automationId = null)
     {
-        var tile = new Border
+        return new Button
         {
+            AutomationId = automationId,
+            Command = command,
+            ImageSource = image,
+            Text = title,
             BackgroundColor = PaleBlue,
-            StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 18 },
+            BorderWidth = 0,
+            CornerRadius = 18,
+            FontSize = 14,
+            TextColor = Ink,
             Padding = new Thickness(4, 10),
             HeightRequest = 92,
-            Content = new VerticalStackLayout
-            {
-                Spacing = 6,
-                HorizontalOptions = LayoutOptions.Center,
-                Children = { new Image { Source = image, WidthRequest = 34, HeightRequest = 34 }, new Label { Text = title, FontSize = 14, TextColor = Ink, HorizontalTextAlignment = TextAlignment.Center } }
-            }
         };
-        if (command is not null)
-        {
-            var tap = new TapGestureRecognizer();
-            tap.Tapped += (_, _) => command.Execute(null);
-            tile.GestureRecognizers.Add(tap);
-        }
-
-        return tile;
     }
 
     private static View CreateNavigationItem(string image, string title, bool selected, System.Windows.Input.ICommand? command = null)

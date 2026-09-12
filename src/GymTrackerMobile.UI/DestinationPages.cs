@@ -84,10 +84,10 @@ public sealed class HistoryPage : ContentPage
             return;
         }
         _stateMessage.IsVisible = false;
-        foreach (var item in _viewModel.Items) _items.Children.Add(BuildItem(item));
+        for (var index = 0; index < _viewModel.Items.Count; index++) _items.Children.Add(BuildItem(_viewModel.Items[index], index));
     }
 
-    private static View BuildItem(HistoryItem item)
+    private static View BuildItem(HistoryItem item, int index)
     {
         var accent = item.IsWorkout ? Teal : Color.FromArgb("#F28C38");
         var iconBackground = item.IsWorkout ? Color.FromArgb("#E8F8F7") : Color.FromArgb("#FFF1E8");
@@ -117,8 +117,8 @@ public sealed class HistoryPage : ContentPage
             VerticalTextAlignment = TextAlignment.Center
         };
         var category = new Label { Text = item.IsWorkout ? "WORKOUT" : "ACTIVITY", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = accent };
-        var name = new Label { Text = item.Name, FontSize = 19, FontAttributes = FontAttributes.None, TextColor = Ink };
-        var itemDetails = new Label { Text = item.Details, FontSize = 14, TextColor = accent };
+        var name = new Button { AutomationId = UiAutomationIds.HistoryName(index), Text = item.Name, FontSize = 19, FontAttributes = FontAttributes.None, TextColor = Ink, BackgroundColor = Colors.Transparent, BorderWidth = 0, Padding = 0, HorizontalOptions = LayoutOptions.Start };
+        var itemDetails = new Button { AutomationId = UiAutomationIds.HistoryDetails(index), Text = item.Details, FontSize = 14, TextColor = accent, BackgroundColor = Colors.Transparent, BorderWidth = 0, Padding = 0, HorizontalOptions = LayoutOptions.Start };
         var notes = new Label { Text = item.Notes, FontSize = 13, TextColor = Muted, IsVisible = !string.IsNullOrWhiteSpace(item.Notes), LineBreakMode = LineBreakMode.WordWrap };
         var details = new Grid
         {
@@ -164,12 +164,22 @@ public sealed class HistoryPage : ContentPage
         Microsoft.Maui.Controls.Grid.SetColumn(chevron, 2);
 
         var card = new Border { BackgroundColor = Colors.White, Stroke = Color.FromArgb("#E2EBF5"), StrokeThickness = 1, Padding = new Thickness(14, 13), StrokeShape = new RoundRectangle { CornerRadius = 18 }, Content = cardContent };
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
+        var open = new Button
+        {
+            AutomationId = UiAutomationIds.HistoryItem(index),
+            BackgroundColor = Colors.Transparent,
+            BorderWidth = 0,
+            CornerRadius = 18,
+            Text = item.Name,
+            TextColor = Colors.Transparent,
+            Padding = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        open.Clicked += async (_, _) => await Shell.Current.GoToAsync(item.IsWorkout
             ? $"{NavigationRoutes.WorkoutSummary}?sessionId={item.Id}"
             : $"{NavigationRoutes.ActivitySummary}?activityId={item.Id}");
-        card.GestureRecognizers.Add(tap);
-        return card;
+        return new Grid { Children = { card, open } };
     }
 
     private static string ActivityIcon(string activityName) => activityName switch

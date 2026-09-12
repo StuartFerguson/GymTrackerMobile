@@ -2,9 +2,10 @@ using GymTrackerMobile.Persistence;
 
 namespace GymTrackerMobile.UI;
 
-public sealed class StartupViewModel(IDatabaseInitializer databaseInitializer)
+public sealed class StartupViewModel(IDatabaseInitializer databaseInitializer, IAppDataResetService? uiTestResetService = null)
 {
     private readonly IDatabaseInitializer _databaseInitializer = databaseInitializer;
+    private readonly IAppDataResetService? _uiTestResetService = uiTestResetService;
     private bool _isInitializing;
 
     public StartupState State { get; private set; } = new();
@@ -22,6 +23,12 @@ public sealed class StartupViewModel(IDatabaseInitializer databaseInitializer)
         try
         {
             await _databaseInitializer.InitializeAsync(cancellationToken);
+#if DEBUG
+            if (UiTestLaunchOptions.IsEnabled && _uiTestResetService is not null)
+            {
+                await _uiTestResetService.ResetAsync(cancellationToken);
+            }
+#endif
             State = new(IsReady: true);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

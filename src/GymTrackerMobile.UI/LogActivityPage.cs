@@ -10,11 +10,11 @@ public sealed class LogActivityPage : ContentPage
     private static readonly Color Teal = Color.FromArgb("#169F9A");
     private readonly ActivityLogViewModel _viewModel;
     private readonly DatePicker _date = new() { Format = "dd MMM yyyy", MaximumDate = DateTime.Today };
-    private readonly Entry _duration = NumberEntry("e.g. 45");
-    private readonly Entry _distance = NumberEntry("e.g. 5.25");
-    private readonly Entry _steps = NumberEntry("e.g. 6200");
+    private readonly Entry _duration = NumberEntry("activity-duration", "e.g. 45");
+    private readonly Entry _distance = NumberEntry("activity-distance", "e.g. 5.25");
+    private readonly Entry _steps = NumberEntry("activity-steps", "e.g. 6200");
     private readonly Editor _notes = new() { Placeholder = "How did it feel?", AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 90 };
-    private readonly Button _save = new() { Text = "Save activity", FontSize = 18, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 26, HeightRequest = 54 };
+    private readonly Button _save = new() { AutomationId = UiAutomationIds.ActivitySave, Text = "Save activity", FontSize = 18, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 26, HeightRequest = 54 };
     private readonly Label _status = new() { FontSize = 15, HorizontalTextAlignment = TextAlignment.Center, IsVisible = false };
     private readonly VerticalStackLayout _errors = new() { Spacing = 4 };
     private readonly Grid _typeSelector = new() { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
@@ -25,8 +25,8 @@ public sealed class LogActivityPage : ContentPage
     private readonly Label _durationError = ErrorLabel();
     private readonly Label _distanceError = ErrorLabel();
     private readonly Label _stepsError = ErrorLabel();
-    private readonly Entry _poolLength = NumberEntry("e.g. 25");
-    private readonly Entry _poolLengths = NumberEntry("e.g. 40");
+    private readonly Entry _poolLength = NumberEntry("activity-pool-length", "e.g. 25");
+    private readonly Entry _poolLengths = NumberEntry("activity-pool-lengths", "e.g. 40");
     private readonly Label _poolLengthError = ErrorLabel();
     private readonly Label _poolLengthsError = ErrorLabel();
     private readonly Label _swimmingDistance = new() { FontSize = 14, TextColor = Muted };
@@ -48,9 +48,10 @@ public sealed class LogActivityPage : ContentPage
         _poolLengths.TextChanged += (_, _) => { _viewModel.PoolLengthsText = _poolLengths.Text ?? string.Empty; Render(); };
         _notes.TextChanged += (_, _) => _viewModel.NotesText = _notes.Text ?? string.Empty;
         _save.Clicked += async (_, _) => await SaveAsync();
-        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
+        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(64), new(76) } };
         content.Add(BuildBody(), 0, 0);
-        content.Add(BuildBottomNavigation(), 0, 1);
+        content.Add(_save, 0, 1);
+        content.Add(BuildBottomNavigation(), 0, 2);
         Content = content;
     }
 
@@ -122,8 +123,7 @@ public sealed class LogActivityPage : ContentPage
                 metrics,
                 _swimmingFields,
                 FieldLabel("Notes (optional)"), BuildOutlinedInput(_notes),
-                _errors, _status,
-                _save
+                _errors, _status
             }
         };
         return new Border { BackgroundColor = Colors.White, StrokeThickness = 0, Padding = new Thickness(14, 18, 14, 16), StrokeShape = new RoundRectangle { CornerRadius = 24 }, Content = content };
@@ -138,6 +138,7 @@ public sealed class LogActivityPage : ContentPage
             var label = new Label { Text = type.ToString(), FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Ink, VerticalTextAlignment = TextAlignment.Center, HorizontalTextAlignment = TextAlignment.Center };
             var card = new Border
             {
+                AutomationId = UiAutomationIds.ActivityType(type.ToString()),
                 BackgroundColor = Color.FromArgb("#F1F4FA"), StrokeThickness = 0, Padding = new Thickness(4, 6), HeightRequest = 58,
                 StrokeShape = new RoundRectangle { CornerRadius = 14 },
                 Content = new HorizontalStackLayout
@@ -223,7 +224,7 @@ public sealed class LogActivityPage : ContentPage
 
     private static Label FieldLabel(string text) => new() { Text = text, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Ink, Margin = new Thickness(0, 4, 0, -4) };
     private static Label ErrorLabel() => new() { TextColor = Color.FromArgb("#B42318"), FontSize = 14, IsVisible = false };
-    private static Entry NumberEntry(string placeholder) => new() { Placeholder = placeholder, Keyboard = Keyboard.Numeric };
+    private static Entry NumberEntry(string automationId, string placeholder) => new() { AutomationId = automationId, Placeholder = placeholder, Keyboard = Keyboard.Numeric };
 
     private static View BuildBottomNavigation() => new Grid
     {

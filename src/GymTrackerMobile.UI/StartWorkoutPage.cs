@@ -10,7 +10,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
     private readonly StartWorkoutViewModel _viewModel;
     private readonly Grid _templates = new() { ColumnSpacing = 10, RowSpacing = 10 };
     private readonly HorizontalStackLayout _styleSelector = new() { Spacing = 8, HorizontalOptions = LayoutOptions.Center };
-    private readonly Button _start = new() { Text = "▶  Start Workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60 };
+    private readonly Button _start = new() { AutomationId = UiAutomationIds.StartWorkout, Text = "▶  Start Workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60 };
     private readonly Button _resume = new() { Text = "↻  Resume workout", FontSize = 20, FontAttributes = FontAttributes.Bold, BackgroundColor = Teal, TextColor = Colors.White, CornerRadius = 30, HeightRequest = 60, IsVisible = false };
     private readonly Label _error = new() { FontSize = 15, TextColor = Color.FromArgb("#B42318"), HorizontalTextAlignment = TextAlignment.Center, IsVisible = false };
 
@@ -22,9 +22,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         _start.Command = viewModel.StartCommand;
         _resume.Clicked += async (_, _) => await _viewModel.ResumeWorkoutAsync();
 
-        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76) } };
+        var content = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(76), new(76) } };
         content.Add(BuildBody(), 0, 0);
-        content.Add(BuildBottomNavigation(), 0, 1);
+        content.Add(_start, 0, 1);
+        content.Add(BuildBottomNavigation(), 0, 2);
         Content = content;
     }
 
@@ -39,7 +40,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (Guid.TryParse(query["templateId"]?.ToString(), out var templateId)) _pendingTemplateId = templateId;
+        if (query.TryGetValue("templateId", out var value) && Guid.TryParse(value?.ToString(), out var templateId))
+        {
+            _pendingTemplateId = templateId;
+        }
     }
 
     private View BuildBody() => new ScrollView
@@ -47,7 +51,7 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         Content = new VerticalStackLayout
         {
             Padding = new Thickness(20, 22, 20, 28), Spacing = 18,
-            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _resume, _templates, _start, _error, BuildConsistencyBanner() }
+            Children = { BuildHeader(), BuildWelcome(), BuildHeading(), BuildIllustrationStyleSelector(), _resume, _templates, _error, BuildConsistencyBanner() }
         }
     };
 
@@ -107,12 +111,23 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         cardGrid.Add(new Label { Text = template.Name, FontSize = 21, FontAttributes = FontAttributes.Bold, TextColor = Ink }, 0, 1);
         cardGrid.Add(new Label { Text = template.Description, FontSize = 15, TextColor = Muted, LineBreakMode = LineBreakMode.TailTruncation }, 0, 2);
         var card = new Border { BackgroundColor = selected ? Color.FromArgb("#F0FBFA") : Colors.White, Stroke = selected ? Teal : Color.FromArgb("#E2EBF5"), StrokeThickness = selected ? 2 : 1, Padding = new Thickness(14, 16), StrokeShape = new RoundRectangle { CornerRadius = 20 }, Content = cardGrid };
-        Grid.SetColumn(card, index % 2);
-        Grid.SetRow(card, index / 2);
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) => { _viewModel.SelectTemplate(template.Id); Render(); };
-        card.GestureRecognizers.Add(tap);
-        return card;
+        var select = new Button
+        {
+            AutomationId = template.Name.Equals("Push", StringComparison.OrdinalIgnoreCase) ? UiAutomationIds.StartTemplatePush : $"start-template-{template.Name.ToLowerInvariant().Replace(' ', '-')}",
+            BackgroundColor = Colors.Transparent,
+            BorderWidth = 0,
+            CornerRadius = 20,
+            Text = template.Name,
+            TextColor = Colors.Transparent,
+            Padding = 0,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        select.Clicked += (_, _) => { _viewModel.SelectTemplate(template.Id); Render(); };
+        var container = new Grid { Children = { card, select } };
+        Grid.SetColumn(container, index % 2);
+        Grid.SetRow(container, index / 2);
+        return container;
     }
 
     private static View BuildConsistencyBanner() => new Border
@@ -140,7 +155,10 @@ public sealed class StartWorkoutPage : ContentPage, IQueryAttributable
         _templates.RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) };
         _templates.ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) };
         for (var index = 0; index < _viewModel.State.Templates.Count; index++) _templates.Children.Add(BuildTemplateCard(_viewModel.State.Templates[index], index));
-        _start.IsEnabled = _viewModel.State.CanStart;
+        // Keep the native control in Android's accessibility tree even before a template is selected.
+        // StartWorkoutViewModel.StartWorkoutAsync guards the command when starting is not allowed.
+        _start.IsEnabled = true;
+        _start.Opacity = _viewModel.State.CanStart ? 1 : 0.6;
         _resume.IsVisible = _viewModel.State.CanResume;
         _resume.Text = _viewModel.State.HasActiveWorkout ? $"↻  Resume {_viewModel.State.ActiveWorkoutName}" : "↻  Resume workout";
         _start.Text = _viewModel.State.IsStarting ? "Starting…" : _viewModel.State.SelectedTemplateId is null ? "Select a workout" : $"▶  Start {_viewModel.State.SelectedTemplateName}";

@@ -98,7 +98,7 @@ public sealed class ExerciseProgressPage : ContentPage
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(88), new(GridLength.Star) }, ColumnSpacing = 14 };
         grid.Add(new Border { BackgroundColor = Color.FromArgb("#EAF4FE"), StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = new Image { Source = exercise.ImageSource, Aspect = Aspect.AspectFit } }, 0, 0);
-        grid.Add(new VerticalStackLayout { Spacing = 3, Children = { new Label { Text = exercise.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink }, new Label { Text = exercise.Subtitle, FontSize = 16, TextColor = Muted }, new Label { Text = exercise.IsBodyweight ? "Track repetitions and completed sets." : "Track load, repetitions, and completed sets.", FontSize = 15, TextColor = Muted } } }, 1, 0);
+        grid.Add(new VerticalStackLayout { Spacing = 3, Children = { new Button { AutomationId = UiAutomationIds.ProgressExerciseName, Text = exercise.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Ink, BackgroundColor = Colors.Transparent, BorderWidth = 0, Padding = 0, HorizontalOptions = LayoutOptions.Start }, new Label { Text = exercise.Subtitle, FontSize = 16, TextColor = Muted }, new Label { Text = exercise.IsBodyweight ? "Track repetitions and completed sets." : "Track load, repetitions, and completed sets.", FontSize = 15, TextColor = Muted } } }, 1, 0);
         return Card(grid);
     }
 
